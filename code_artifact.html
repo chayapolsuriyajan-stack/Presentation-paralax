@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>กำเนิดและสุดขอบจักรวาล</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-color: #030303;
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --border-color: #333333;
+    --glass-bg: rgba(10, 10, 10, 0.75);
+  }
+  
+  body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Prompt', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+  }
+
+  /* พื้นหลังดวงดาว */
+  .bg-stars {
+    position: fixed;
+    top: -10%; left: -10%;
+    width: 120%; height: 120%;
+    background: radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1.5px 1.5px at 150px 300px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 280px 80px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 400px 450px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2.5px 2.5px at 580px 220px, #fff, rgba(0,0,0,0));
+    background-size: 600px 600px;
+    opacity: 0.3;
+    z-index: 0;
+    transition: transform 1.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  /* กราฟิกหลุมดำ CSS */
+  .blackhole-wrapper {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    /* ศูนย์กลางหน้าจอตอนเริ่ม */
+    transform: translate(-50%, -50%) scale(1.2);
+    z-index: 1;
+    transition: transform 1.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  .bh-event-horizon {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 250px;
+    height: 250px;
+    background: #000;
+    border-radius: 50%;
+    box-shadow: 0 0 60px 15px rgba(255,255,255,0.6), inset 0 0 20px rgba(255,255,255,0.1);
+    z-index: 3;
+  }
+
+  .bh-accretion-disk {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 800px;
+    height: 800px;
+    border-radius: 50%;
+    background: radial-gradient(circle, transparent 30%, rgba(255,255,255,0.85) 40%, rgba(255,255,255,0.1) 60%, transparent 70%);
+    transform: translate(-50%, -50%) rotateX(75deg);
+    z-index: 2;
+    animation: rotateDisk 15s linear infinite;
+  }
+
+  .bh-photon-ring {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 270px;
+    height: 270px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.9);
+    box-shadow: 0 0 20px rgba(255,255,255,0.8);
+    z-index: 4;
+  }
+
+  @keyframes rotateDisk {
+    0% { transform: translate(-50%, -50%) rotateX(75deg) rotateZ(0deg); }
+    100% { transform: translate(-50%, -50%) rotateX(75deg) rotateZ(360deg); }
+  }
+
+  .slider-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    transition: transform 1.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    z-index: 10;
+  }
+
+  .slide {
+    width: 100vw;
+    height: 100vh;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem;
+    box-sizing: border-box;
+    /* เราให้พื้นหลังสไลด์โปร่งใส เพื่อให้เห็นหลุมดำและดาวด้านหลัง */
+    background: transparent;
+  }
+
+  /* หน้าปกไม่มีกรอบ */
+  .title-slide .slide-content {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    text-align: center;
+    margin-top: -30vh; /* ดันข้อความขึ้นให้หลุมดำอยู่ตรงกลาง */
+  }
+  .title-slide h1 {
+    font-size: 4rem;
+    border: none;
+    text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+  }
+
+  .slide-content {
+    max-width: 900px;
+    width: 100%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 3rem 4.5rem;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+    position: relative;
+    overflow: hidden;
+  }
+
+  h1 { 
+    font-size: 2.2rem; 
+    font-weight: 700;
+    border-bottom: 2px solid var(--border-color); 
+    padding-bottom: 1rem; 
+    margin-top: 0; 
+    margin-bottom: 1.5rem;
+    letter-spacing: 1.5px;
+    color: var(--text-primary);
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+    letter-spacing: 3px;
+    color: #888;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    display: block;
+    font-weight: 600;
+  }
+
+  p { 
+    font-size: 1.1rem; 
+    line-height: 1.8; 
+    color: var(--text-secondary); 
+    margin-bottom: 1.5rem;
+  }
+
+  ul { 
+    padding-left: 1.5rem; 
+    margin-bottom: 1.5rem;
+  }
+  
+  li {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    margin-bottom: 0.8rem;
+  }
+
+  strong { 
+    color: #fff; 
+    font-weight: 600;
+  }
+
+  /* Parallax Elements inside content */
+  .plx-element {
+    transition: transform 1.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  .nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+    z-index: 30;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(4px);
+  }
+  
+  .nav-btn:hover { 
+    background: rgba(255, 255, 255, 1); 
+    color: #000; 
+    border-color: #fff;
+    box-shadow: 0 0 20px rgba(255,255,255,0.4);
+  }
+  
+  .prev-btn { left: 40px; }
+  .next-btn { right: 40px; }
+
+  /* Page Indicator */
+  .page-indicator {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1rem;
+    letter-spacing: 2px;
+    color: #888;
+    z-index: 30;
+  }
+</style>
+</head>
+<body>
+
+  <!-- พารัลแลกซ์พื้นหลังดาว -->
+  <div class="bg-stars" id="bgStars"></div>
+  
+  <!-- กราฟิกหลุมดำสำหรับทำพารัลแลกซ์ -->
+  <div class="blackhole-wrapper" id="blackhole">
+    <div class="bh-accretion-disk"></div>
+    <div class="bh-photon-ring"></div>
+    <div class="bh-event-horizon"></div>
+  </div>
+
+  <div class="slider-container" id="slider">
+    
+    <!-- Slide 0: Title Page (หน้าปก 1/12) -->
+    <div class="slide title-slide">
+      <div class="slide-content plx-element" data-plx="0.05">
+        <span class="subtitle plx-element" data-plx="0.08">The Universe and Beyond</span>
+        <h1 class="plx-element" data-plx="0.02">กำเนิดและสุดขอบจักรวาล</h1>
+        <p class="plx-element" data-plx="0.1">จากประวัติศาสตร์โบราณ สู่ยุคอวกาศใหม่</p>
+      </div>
+    </div>
+
+    <!-- Slide 1: จุดเริ่มต้น (2/12) -->
+    <div class="slide">
+      <div class="slide-content">
+        <span class="subtitle plx-element" data-plx="0.1">01 / History</span>
+        <h1 class="plx-element" data-plx="0.05">จุดเริ่มต้น: ประวัติศาสตร์แนวคิดจักรวาล</h1>
+        <ul class="plx-element" data-plx="0.02">
+          <li><strong>ยุคกรีกโบราณ:</strong> เชื่อว่าโลกเป็นศูนย์กลางของจักรวาล (Geocentric) โดยมีดวงดาวหมุนรอบ</li>
+          <li><strong>นิโคลัส คอเปอร์นิคัส:</strong> เสนอแนวคิดใหม่ว่าดวงอาทิตย์ต่างหากที่เป็นศูนย์กลาง (Heliocentric)</li>
+          <li><strong>กาลิเลโอ กาลิเลอี:</strong> บิดาแห่งวิทยาศาสตร์สมัยใหม่ ผู้ใช้กล้องโทรทรรศน์ส่องดูดาวพฤหัสบดี ยืนยันว่าไม่ได้มีแค่โลกที่เป็นศูนย์กลางของทุกสิ่ง</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 2: ยุคบุกเบิกถึงปัจจุบัน (3/12) -->
+    <div class="slide">
+      <div class="slide-content">
+        <span class="subtitle plx-element" data-plx="0.1">02 / Era</span>
+        <h1 class="plx-element" data-plx="0.05">จากยุค Space Race ถึง New Space Era</h1>
+        <ul class="plx-element" data-plx="0.02">
+          <li><strong>ยุคสงครามเย็น (Space Race):</strong> การแข่งขันด้านเทคโนโลยีอวกาศ สปุตนิกของโซเวียต และยานอะพอลโลของสหรัฐอเมริกาที่นำมนุษย์เหยียบดวงจันทร์</li>
+          <li><strong>ยุคปัจจุบัน (New Space Era):</strong> การเข้าสู่อุตสาหกรรมอวกาศของเอกชน เช่น SpaceX ที่พัฒนาระบบจรวดนำกลับมาใช้ใหม่ (Reusable Rockets)</li>
+          <li><strong>ผลลัพธ์:</strong> ต้นทุนการเดินทางสู่อวกาศลดลงอย่างมหาศาล เปิดประตูสู่การท่องเที่ยวอวกาศเชิงพาณิชย์</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 3: ดวงตาบนโลก (4/12) -->
+    <div class="slide">
+      <div class="slide-content">
+        <span class="subtitle plx-element" data-plx="0.1">03 / Earth Observation</span>
+        <h1 class="plx-element" data-plx="0.05">ดวงตาบนโลก: กล้องโทรทรรศน์</h1>
+        <p class="plx-element" data-plx="0.02">เครื่องมือที่ช่วยเบิกเนตรให้มนุษย์เข้าใจความกว้างใหญ่ของเอกภพ</p>
+        <ul class="plx-element" data-plx="0.02">
+          <li><strong>แบบหักเหแสง (Refracting):</strong> ใช้เลนส์รวมแสง เหมาะกับการสังเกตดาวเคราะห์ที่สว่าง</li>
+          <li><strong>แบบสะท้อนแสง (Reflecting):</strong> ใช้กระจกโค้งรวมแสง สร้างขนาดใหญ่ได้ง่ายและลดความคลาดสี</li>
+          <li><strong>ข้อจำกัด:</strong> การสังเกตการณ์บนโลกถูกรบกวนโดยชั้นบรรยากาศ ฝุ่นละออง และมลภาวะทางแสง (Light Pollution)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 4: ดวงตาในอวกาศ (5/12) -->
+    <div class="slide">
+      <div class="slide-content">
+        <span class="subtitle plx-element" data-plx="0.1">04 / Space Telescope</span>
+        <h1 class="plx-element" data-plx="0.05">ดวงตาในอวกาศ: ก้าวข้ามข้อจำกัด</h1>
+        <ul class="plx-element" data-plx="0.02">
+          <li><strong>กล้องโทรทรรศน์อวกาศ:</strong> เช่น Hubble และ James Webb ถูกส่งขึ้นไปโคจรเหนือชั้นบรรยากาศ เพื่อให้ได้ภาพที่คมชัดระดับลึกสุดของเอกภพ</li>
+          <li><strong>การมองทะลุแสงที่ตาเห็น:</strong> จักรวาลไม่ได้มีแค่แสงขาว เราใช้กล้องโทรทรรศน์ตรวจจับคลื่นวิทยุ อินฟราเรด และรังสีเอกซ์</li>
+          <li><strong>ประโยชน์:</strong> ช่วยให้เราถ่ายภาพหลุมดำ ค้นพบดาวเคราะห์นอกระบบ และมองทะลุกลุ่มฝุ่นเนบิวลาหนาทึบได้</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 5: พาหนะสู่อวกาศ (6/12) -->
+    <div class="slide">
+      <div class="slide-content">
+        <span class="subtitle plx-element" data-plx="0.1">05 / Rocketry</span>
+        <h1 class="plx-element" data-plx="0.05">พาหนะสู่อวกาศ: จรวดและความเร็วหลุดพ้น</h1>
+        <ul class="plx-element" data-plx="0.02">
+          <li><strong>หลักการทำงาน:</strong> อาศัยกฎข้อที่ 3 ของนิวตัน (Action = Reaction) การเผาไหม้และพ่นก๊าซร้อนออกด้านหลังด้วยความเร็วสูง ทำให้จรวดพุ่งไปข้างหน้า</li>
+          <li><strong>ความเร็วหลุดพ้น (Escape Velocity):</strong> การจะหลุดจากแรงโน้มถ่วงของโลกได้ จรวดต้องมีความเร็วอย่างน้อย 11.2 กิโลเมตรต่อวินาที</li>
+          <li><strong>ระบบขับเคลื่อน:</strong> มีทั้งจรวดเชื้อเพลิงแข็ง จรวดเชื้อเพลิงเหลว และการพัฒนาไอออนทรัสเตอร์ (Ion Thruster) สำหรับการเดินทางไกลในอวกาศลึก</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 6: บ้านในอวกาศ (7/12) -->
+    <div class="slide">
+      <div class="slide-content">
+        <span class="subtitle plx-element" data-plx="0.1">06 / Microgravity</span>
+        <h1 class="plx-element" data-plx="0.05">บ้านในอวกาศ: สถานีอวกาศนานาชาติ (ISS)</h1>
+        <ul class="plx-element" data-plx="0.02">
+          <li><strong>สิ่งก่อสร้างที่ใหญ่ที่สุด:</strong> ความร่วมมือของนานาชาติ โคจรสูงจากพื้นโลกราว 400 กิโลเมตร ด้วยความเร็ว 28,000 กม./ชม.</li>
+          <li><strong>สภาวะแรงโน้มถ่วงต่ำ (Microgravity):</strong> ไม่ใช่สภาวะ "ไร้แรงโน้มถ่วง" แต่เป็นการตกอย่างอิสระอย่างต่อเนื่องรอบโลก</li>
+          <li><strong>ห้องทดลองวิทย์:</strong> ใช้ทดลองทางวิทยาศาสตร์ที่ทำบนโลกไม่ได้ เช่น การตกผลึกโปรตีนที่สมบูรณ์แบบเพื่อผลิตยารักษาโรค และการศึกษาผลกระทบของอวกาศต่อร่างกายมนุษย์</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 7: เพื่อนบ้านใกล้เคียง (8/12) -->
+    <div class="slide">
+      <div class="slide-content">
+        <span class="subtitle plx-element" data-plx="0.1">07 / Neighbors</span>
+        <h1 class="plx-element" data-plx="0.05">เพื่อนบ้านใกล้เคียง: ดวงจันทร์และดาวอังคาร</h1>
+        <ul class="plx-element" data-plx="0.02">
+          <li><strong>ดวงจันทร์:</strong> ก้าวแรกของมนุษยชาติ (โครงการ Apollo) ปัจจุบันกำลังมีโครงการ Artemis เพื่อส่งมนุษย์กลับไปสร้างฐานที่อยู่อาศัยถาวร</li>
+          <li><strong>ดาวอังคาร:</strong> ฝาแฝดที่หนาวเหน็บของโลก มีการส่งยานสำรวจและรถโรเวอร์ (เช่น Perseverance) ไปค้นหาร่องรอยของสิ่งมีชีวิตดึกดำบรรพ์และแหล่งน้ำ</li>
+          <li><strong>เป้าหมายอนาคต:</strong> ดาวอังคารคือจุดหมายถัดไปสำหรับการตั้งอาณานิคมของเผ่าพันธุ์มนุษย์</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 8: ไขปริศนากำเนิด (9/12) -->
+    <div class="slide">
+      <div class="slide-content">
+        <span class="subtitle plx-element" data-plx="0.1">08 / Origins</span>
+        <h1 class="plx-element" data-plx="0.05">ไขปริศนากำเนิด: ดวงอาทิตย์และดาวเคราะห์น้อย</h1>
+        <ul class="plx-element" data-plx="0.02">
+          <li><strong>สัมผัสดวงอาทิตย์:</strong> ยาน Parker Solar Probe เป็นยานลำแรกที่บินเข้าไปในชั้นบรรยากาศคอโรนา เพื่อศึกษาลมสุริยะที่ส่งผลกระทบต่อโลก</li>
+          <li><strong>ดาวเคราะห์น้อย (Asteroids):</strong> เปรียบเสมือน Time Capsule หรือเศษซากที่เหลือจากการก่อตัวของระบบสุริยะเมื่อ 4,600 ล้านปีก่อน</li>
+          <li><strong>ภารกิจเก็บตัวอย่าง:</strong> ยาน OSIRIS-REx และ Hayabusa2 สามารถเก็บตัวอย่างฝุ่นหินจากดาวเคราะห์น้อยกลับมายังโลกเพื่อไขความลับต้นกำเนิดน้ำและชีวิต</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 9: สุดขอบระบบสุริยะ (10/12) -->
+    <div class="slide">
+      <div class="slide-content">
+        <span class="subtitle plx-element" data-plx="0.1">09 / The Edge</span>
+        <h1 class="plx-element" data-plx="0.05">สุดขอบระบบสุริยะ: โวยาเจอร์และการเดินทางไกล</h1>
+        <ul class="plx-element" data-plx="0.02">
+          <li><strong>สำรวจดาวยักษ์:</strong> ยานอวกาศผ่านดาวพฤหัสบดีและดาวเสาร์เพื่อศึกษาพายุที่รุนแรงและวงแหวนน้ำแข็ง</li>
+          <li><strong>ยานโวยาเจอร์ (Voyager 1 & 2):</strong> ปล่อยตัวตั้งแต่ปี 1977 ปัจจุบันเดินทางทะลุขอบเขต "เฮลิโอพอส" (Heliopause) ซึ่งเป็นจุดสิ้นสุดอิทธิพลลมสุริยะ</li>
+          <li><strong>อวกาศระหว่างดาว (Interstellar Space):</strong> ยานทั้งสองเป็นวัตถุที่มนุษย์สร้างขึ้นที่เดินทางไกลที่สุด นำพาแผ่นจานทองคำที่บันทึกเสียงและภาพของมนุษยชาติออกสู่เอกภพ</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 10: ฮีโร่เหนือฟ้า & โลก (11/12) -->
+    <div class="slide">
+      <div class="slide-content">
+        <span class="subtitle plx-element" data-plx="0.1">10 / Satellites</span>
+        <h1 class="plx-element" data-plx="0.05">ฮีโร่เหนือฟ้า: การเชื่อมโยงโลกด้วยดาวเทียม</h1>
+        <ul class="plx-element" data-plx="0.02">
+          <li><strong>อุตุนิยมวิทยาและภัยพิบัติ:</strong> ติดตามพายุเฮอริเคน คาดการณ์สภาพอากาศ และเตือนภัยไฟป่าแบบเรียลไทม์</li>
+          <li><strong>การสื่อสารและการนำทาง:</strong> สัญญาณอินเทอร์เน็ต เครือข่ายโทรคมนาคม และระบบ GPS ที่เราใช้ทุกวัน ล้วนพึ่งพาดาวเทียมในวงโคจร</li>
+          <li><strong>สำรวจทรัพยากร:</strong> ถ่ายภาพเพื่อวางแผนการเกษตร ตรวจวัดปริมาณฝุ่น PM 2.5 และเครือข่ายการจัดการระดับชาติ</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 11: คนไทยสู่อวกาศ & ดาราศาสตร์ (12/12) -->
+    <div class="slide">
+      <div class="slide-content">
+        <span class="subtitle plx-element" data-plx="0.1">11 / Thailand & Future</span>
+        <h1 class="plx-element" data-plx="0.05">คนไทยสู่อวกาศ และดาราศาสตร์ใกล้ตัว</h1>
+        <ul class="plx-element" data-plx="0.02">
+          <li><strong>งานวิจัยไทยในอวกาศ:</strong> ประเทศไทยมีการส่งการทดลองขึ้นสู่สถานี ISS อย่างต่อเนื่อง เช่น การปลูกผลึกโปรตีนต้านโรคมาลาเรีย และการส่งอาหารไทย</li>
+          <li><strong>ดาวเทียมฝีมือคนไทย:</strong> การพัฒนา THEOS-2 และโครงการภาคีวิจัยอวกาศไทย (TSC) ยกระดับวิศวกรไทยสู่เวทีโลก</li>
+          <li><strong>การประยุกต์ใช้ชีวิตประจำวัน:</strong> ดาราศาสตร์ไม่ใช่เรื่องไกลตัว แต่ช่วยให้เราวางแผนดูดาว ฝึกการคิดวิเคราะห์อย่างเป็นเหตุผล ท้องฟ้าคือพรมแดนใหม่แห่งโอกาสและแรงบันดาลใจ</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <button class="nav-btn prev-btn" onclick="moveSlide(-1)" id="prevBtn" aria-label="Previous Slide">&#10094;</button>
+  <button class="nav-btn next-btn" onclick="moveSlide(1)" id="nextBtn" aria-label="Next Slide">&#10095;</button>
+
+  <div class="page-indicator" id="pageIndicator">1 / 12</div>
+
+<script>
+  let currentSlide = 0;
+  const totalSlides = 12;
+  
+  const slider = document.getElementById('slider');
+  const bgStars = document.getElementById('bgStars');
+  const blackhole = document.getElementById('blackhole');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const pageIndicator = document.getElementById('pageIndicator');
+  
+  // Select all slides to handle element parallax inside them
+  const slides = document.querySelectorAll('.slide');
+
+  function updateUI() {
+    // 1. เลื่อนกล่องสไลด์หลัก (แนวนอน)
+    slider.style.transform = `translateX(-${currentSlide * 100}vw)`;
+    
+    // 2. Parallax: เลื่อนพื้นหลังดวงดาว (ช้าที่สุด)
+    bgStars.style.transform = `translateX(-${currentSlide * 8}vw)`;
+    
+    // 3. Parallax: อนิเมชันของ Black hole
+    if (currentSlide === 0) {
+      // หน้าปก: ใหญ่และอยู่ตรงกลาง
+      blackhole.style.transform = `translate(-50%, -50%) scale(1.1)`;
+      blackhole.style.opacity = '1';
+    } else {
+      // หน้าอื่นๆ: ย่อขนาดลงเล็กน้อย เลื่อนไปซ้าย และมีความเร็วเหลื่อมกับสไลด์เล็กน้อย
+      // ยิ่ง slide ขยับไป ขยับ blackhole ไปทางซ้ายช้าๆ
+      const bhTranslateX = 50 + (currentSlide * 20); // vw
+      const bhScale = 0.65;
+      blackhole.style.transform = `translate(-${bhTranslateX}vw, -50%) scale(${bhScale})`;
+      blackhole.style.opacity = '0.7'; // ลดความสว่างลงไม่ให้แย่งซีนเนื้อหา
+    }
+
+    // 4. Parallax ขององค์ประกอบ (ข้อความ) ในแต่ละสไลด์
+    slides.forEach((slide, index) => {
+      const plxElements = slide.querySelectorAll('.plx-element');
+      // คำนวณระยะห่างของสไลด์หน้านี้เทียบกับหน้าปัจจุบัน
+      const diff = index - currentSlide; 
+      
+      plxElements.forEach(el => {
+        const factor = parseFloat(el.getAttribute('data-plx')) || 0.05;
+        // ถ้าอยู่หน้าอื่น ให้บวกค่า Transform X ไปทวีคูณ ทำให้เลื่อนเข้า/ออกด้วยความเร็วที่ต่างกัน
+        const offset = diff * (100 * factor) * 10; 
+        
+        if (diff === 0) {
+          el.style.transform = `translateX(0)`;
+          el.style.opacity = '1';
+        } else {
+          el.style.transform = `translateX(${offset}px)`;
+          el.style.opacity = '0';
+        }
+      });
+    });
+
+    // 5. อัปเดตปุ่มและตัวระบุหน้า
+    pageIndicator.innerText = `${currentSlide + 1} / ${totalSlides}`;
+    prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+    prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+    nextBtn.style.opacity = currentSlide === totalSlides - 1 ? '0.2' : '1';
+    nextBtn.style.pointerEvents = currentSlide === totalSlides - 1 ? 'none' : 'auto';
+  }
+
+  function moveSlide(direction) {
+    let newSlide = currentSlide + direction;
+    if (newSlide >= 0 && newSlide < totalSlides) {
+      currentSlide = newSlide;
+      updateUI();
+    }
+  }
+
+  // รองรับการควบคุมด้วยคีย์บอร์ด
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+      moveSlide(1);
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      moveSlide(-1);
+    }
+  });
+
+  // เรียกใช้งานครั้งแรก
+  setTimeout(updateUI, 100);
+</script>
+</body>
+</html>

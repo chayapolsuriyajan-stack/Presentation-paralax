@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แคปซูลกาลเวลา — บันทึกเทคโนโลยีอวกาศแห่งมนุษยชาติ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F8FAFC;
+  --ink:#0F172A;
+  --accent:#0284C7;
+  --muted:#475569;
+  --line:#CBD5E1;
+  --faint:#E2E8F0;
+  --head:'Kanit','Noto Sans Thai','Leelawadee UI',sans-serif;
+  --body:'Sarabun','Noto Sans Thai','Leelawadee UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--paper);color:var(--ink);font-family:var(--body)}
+body{-webkit-font-smoothing:antialiased}
+
+/* ---------- นำทาง ---------- */
+#topbar{position:fixed;top:0;left:0;right:0;height:56px;z-index:60;display:flex;align-items:center;
+  gap:18px;padding:0 24px;background:rgba(248,250,252,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line)}
+#brand{font-family:var(--head);font-weight:600;font-size:14px;letter-spacing:.02em;white-space:nowrap}
+#brand span{color:var(--accent)}
+#dots{display:flex;gap:6px;margin-left:auto;flex-wrap:nowrap;overflow:hidden}
+.dot{width:9px;height:9px;border-radius:50%;border:1px solid var(--line);background:transparent;
+  cursor:pointer;padding:0;transition:all .25s;flex:none}
+.dot:hover{border-color:var(--accent)}
+.dot.on{background:var(--ink);border-color:var(--ink);transform:scale(1.25)}
+#counter{font-family:var(--head);font-size:12px;color:var(--muted);white-space:nowrap;min-width:52px;text-align:right}
+#bar{position:fixed;top:56px;left:0;height:2px;background:var(--accent);z-index:60;transition:width .45s cubic-bezier(.4,0,.2,1)}
+
+/* ---------- โครงสไลด์ ---------- */
+#track{position:absolute;top:56px;left:0;height:calc(100% - 56px);display:flex;
+  transition:transform .7s cubic-bezier(.65,0,.35,1);will-change:transform}
+.slide{width:100vw;height:100%;flex:none;padding:34px 56px 44px;display:flex;flex-direction:column;
+  justify-content:center;position:relative;overflow:hidden}
+.eyebrow{font-family:var(--head);font-size:11px;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+h1{font-family:var(--head);font-weight:600;font-size:clamp(24px,3.1vw,40px);line-height:1.3;letter-spacing:-.01em}
+h2{font-family:var(--head);font-weight:600;font-size:clamp(20px,2.5vw,31px);line-height:1.35;margin-bottom:6px}
+.lede{color:var(--muted);font-size:clamp(13px,1.15vw,16px);line-height:1.65;max-width:52ch;margin-top:8px}
+.grid{display:grid;grid-template-columns:minmax(0,0.86fr) minmax(0,1.14fr);gap:44px;align-items:center;flex:1;min-height:0}
+.figure{min-width:0;display:flex;align-items:center;justify-content:center;height:100%}
+.figure svg{width:100%;height:100%;max-height:100%;display:block}
+.blocks{display:flex;flex-direction:column;gap:14px;margin-top:20px}
+.block{border-left:2px solid var(--line);padding-left:14px;transition:border-color .3s}
+.block:hover{border-color:var(--accent)}
+.block b{display:block;font-family:var(--head);font-weight:500;font-size:15px;margin-bottom:2px}
+.block span{font-size:13.5px;color:var(--muted);line-height:1.55}
+.tag{display:inline-block;font-family:var(--head);font-size:10.5px;font-weight:500;letter-spacing:.06em;
+  border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);margin-right:6px}
+
+/* ปุ่มเจาะลึก */
+.deep{margin-top:22px;display:inline-flex;align-items:center;gap:9px;font-family:var(--head);font-size:13px;
+  font-weight:500;color:var(--paper);background:var(--ink);border:none;border-radius:999px;
+  padding:10px 20px;cursor:pointer;transition:all .3s;align-self:flex-start}
+.deep:hover{background:var(--accent);transform:translateX(3px)}
+.deep i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.deep:hover i{background:var(--paper)}
+
+/* ---------- หน้าปก ---------- */
+#cover{padding:0}
+#heroCanvas,#heroImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#heroCanvas{filter:none}                 /* กลับสีในเชเดอร์แล้ว */
+#heroImg{display:none;filter:invert(1)}  /* fallback ต้องกลับสีด้วย CSS */
+#cover .veil{position:absolute;inset:0;background:
+  linear-gradient(100deg,rgba(248,250,252,.97) 0%,rgba(248,250,252,.86) 34%,rgba(248,250,252,.1) 62%)}
+#cover .inner{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;
+  justify-content:center;padding:0 56px;max-width:760px}
+#cover h1{font-size:clamp(34px,5.4vw,68px);font-weight:600;line-height:1.14;letter-spacing:-.02em}
+#cover .sub{font-family:var(--head);font-weight:300;font-size:clamp(15px,1.7vw,22px);
+  color:var(--muted);margin-top:16px;line-height:1.5}
+#cover .rule{width:64px;height:2px;background:var(--accent);margin:26px 0}
+.hint{font-family:var(--head);font-size:12px;color:var(--muted);letter-spacing:.05em}
+.hint kbd{font-family:var(--head);border:1px solid var(--line);border-radius:4px;padding:1px 7px;
+  margin:0 2px;background:rgba(255,255,255,.7)}
+
+/* ---------- นวัตกรรม ---------- */
+.layers{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.layer{display:flex;gap:14px;align-items:flex-start;padding:11px 14px;border:1px solid var(--faint);
+  border-radius:10px;cursor:pointer;transition:all .28s;background:transparent}
+.layer:hover,.layer.on{border-color:var(--accent);background:#fff;box-shadow:0 6px 20px -12px rgba(2,132,199,.5)}
+.layer .n{font-family:var(--head);font-weight:600;font-size:12px;color:var(--paper);background:var(--ink);
+  width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex:none;margin-top:1px;transition:background .28s}
+.layer.on .n{background:var(--accent)}
+.layer h3{font-family:var(--head);font-weight:500;font-size:14px;margin-bottom:2px}
+.layer p{font-size:12.5px;color:var(--muted);line-height:1.55}
+.dt{display:flex;gap:6px;margin-top:18px;flex-wrap:wrap}
+.dt span{font-family:var(--head);font-size:10.5px;color:var(--muted);border:1px solid var(--line);
+  border-radius:999px;padding:4px 11px}
+.dt span:first-child{border-color:var(--accent);color:var(--accent)}
+
+/* ---------- overlay เจาะลึก ---------- */
+.ov{position:fixed;inset:0;z-index:80;background:rgba(248,250,252,.98);backdrop-filter:blur(6px);
+  display:none;overflow-y:auto;padding:64px 56px}
+.ov.open{display:block;animation:fade .4s ease}
+@keyframes fade{from{opacity:0;transform:scale(.99)}to{opacity:1;transform:none}}
+.ov .wrap{max-width:1080px;margin:0 auto}
+.ov .badge{font-family:var(--head);font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--accent);
+  text-transform:uppercase;margin-bottom:10px}
+.ov h2{margin-bottom:18px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:24px}
+.card{border:1px solid var(--faint);border-radius:12px;padding:18px;background:#fff}
+.card .k{font-family:var(--head);font-size:26px;font-weight:600;color:var(--accent);line-height:1.1}
+.card .t{font-family:var(--head);font-size:14px;font-weight:500;margin:8px 0 5px}
+.card .d{font-size:12.5px;color:var(--muted);line-height:1.6}
+.src{margin-top:26px;font-size:11.5px;color:var(--muted);line-height:1.8;border-top:1px solid var(--faint);padding-top:14px}
+.src b{font-family:var(--head);font-weight:500;color:var(--ink)}
+.close{position:fixed;top:20px;right:24px;z-index:95;width:38px;height:38px;border-radius:50%;
+  border:1px solid var(--line);background:#fff;cursor:pointer;font-size:17px;color:var(--muted);line-height:1}
+.close:hover{border-color:var(--ink);color:var(--ink)}
+
+/* ---------- 360 ---------- */
+#imm{position:fixed;inset:0;z-index:90;display:none;background:var(--paper);cursor:grab}
+#imm.open{display:block}
+#imm.drag{cursor:grabbing}
+#immCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#immUi{position:absolute;left:0;right:0;bottom:0;padding:34px 56px;z-index:2;pointer-events:none;
+  background:linear-gradient(transparent,rgba(248,250,252,.94) 45%)}
+#immUi .st{font-family:var(--head);font-size:11px;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--accent)}
+#immUi h3{font-family:var(--head);font-weight:600;font-size:clamp(20px,2.4vw,30px);margin:6px 0 6px}
+#immUi p{font-size:14px;color:var(--muted);max-width:60ch;line-height:1.6}
+#immBar{position:absolute;top:0;left:0;height:2px;background:var(--accent);width:0;transition:width .3s}
+#immHint{position:absolute;top:26px;left:56px;z-index:2;font-family:var(--head);font-size:12px;color:var(--muted)}
+#immStages{position:absolute;right:56px;top:50%;transform:translateY(-50%);z-index:2;
+  display:flex;flex-direction:column;gap:14px;pointer-events:none}
+#immStages div{font-family:var(--head);font-size:11px;color:var(--line);text-align:right;transition:color .3s}
+#immStages div.on{color:var(--ink);font-weight:600}
+
+/* ---------- responsive ---------- */
+@media (max-width:900px){
+  .slide{padding:24px 22px 32px}
+  .grid{grid-template-columns:1fr;gap:18px;overflow-y:auto}
+  .figure{max-height:36vh}
+  #cover .inner,.ov,#immUi,#immHint{padding-left:22px;padding-right:22px}
+  #immHint{left:22px}
+  #immStages{right:18px}
+  #dots{display:none}
+  .lede{font-size:13px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div id="brand">แคปซูลกาลเวลา <span>·</span> GALACTIC TIME CAPSULE</div>
+  <div id="dots"></div>
+  <div id="counter">01 / 13</div>
+</div>
+<div id="bar"></div>
+
+<div id="track">
+
+  <!-- ========== 0 · ปก ========== -->
+  <section class="slide" id="cover">
+    <canvas id="heroCanvas"></canvas>
+    <img id="heroImg" src="assets/blackhole.jpg" alt="หลุมดำ">
+    <div class="veil"></div>
+    <div class="inner">
+      <div class="eyebrow">ภารกิจบันทึกอารยธรรม · ๒๕๖๙</div>
+      <h1>แคปซูลกาลเวลา<br>แห่งห้วงจักรวาล</h1>
+      <div class="rule"></div>
+      <p class="sub">บันทึกความก้าวหน้าทางเทคโนโลยีอวกาศของมนุษยชาติ<br>เพื่อส่งออกไปนอกระบบสุริยะ</p>
+      <p class="hint" style="margin-top:34px">
+        <kbd>←</kbd><kbd>→</kbd> เดินทางระหว่างหน้า · เลื่อนเมาส์เพื่อมองลึกเข้าไปในหลุมดำ
+      </p>
+    </div>
+  </section>
+
+  <!-- ========== 1 · จุดเริ่มต้น ========== -->
+  <section class="slide">
+    <div class="grid">
+      <div>
+        <div class="eyebrow">หัวข้อ ๐๑ · จุดเริ่มต้น</div>
+        <h1>เมื่อมนุษย์ย้ายโลก<br>ออกจากศูนย์กลาง</h1>
+        <p class="lede">สองพันปีที่เราเชื่อว่าทุกสิ่งหมุนรอบตัวเรา จนกล้องโทรทรรศน์ตัวแรกพิสูจน์ว่าไม่ใช่</p>
+        <div class="blocks">
+          <div class="block"><b>อริสโตเติล · ปโตเลมี</b><span>โลกเป็นศูนย์กลาง ดวงดาวติดบนทรงกลมฟ้าที่หมุนรอบเรา</span></div>
+          <div class="block"><b>โคเปอร์นิคัส — ค.ศ. 1543</b><span>เสนอว่าดวงอาทิตย์ต่างหากที่เป็นศูนย์กลาง</span></div>
+          <div class="block"><b>กาลิเลโอ — ค.ศ. 1610</b><span>เห็นดวงจันทร์ 4 ดวงโคจรรอบดาวพฤหัสบดี — หลักฐานว่ามีสิ่งที่ไม่ได้โคจรรอบโลก</span></div>
+        </div>
+      </div>
+      <div class="figure">
+        <svg viewBox="0 0 520 340" role="img" aria-label="เปรียบเทียบแบบจำลองโลกเป็นศูนย์กลางกับดวงอาทิตย์เป็นศูนย์กลาง">
+          <g data-depth="0.014">
+            <text x="118" y="24" font-family="Kanit" font-size="12" fill="#475569" text-anchor="middle">โลกเป็นศูนย์กลาง</text>
+            <circle cx="118" cy="170" r="118" fill="none" stroke="#E2E8F0"/>
+            <circle cx="118" cy="170" r="88" fill="none" stroke="#E2E8F0"/>
+            <circle cx="118" cy="170" r="58" fill="none" stroke="#E2E8F0"/>
+            <circle cx="118" cy="170" r="30" fill="none" stroke="#E2E8F0"/>
+            <circle cx="118" cy="170" r="9" fill="#0F172A"/>
+            <circle cx="148" cy="170" r="4" fill="#94A3B8"/>
+            <circle cx="118" cy="112" r="5" fill="#94A3B8"/>
+            <circle cx="52"  cy="196" r="6" fill="#94A3B8"/>
+            <circle cx="212" cy="140" r="5" fill="#94A3B8"/>
+            <text x="118" y="312" font-family="Kanit" font-size="10" fill="#94A3B8" text-anchor="middle">ต้องอธิบายด้วยวงกลมซ้อนวงกลม</text>
+          </g>
+          <line x1="262" y1="40" x2="262" y2="300" stroke="#CBD5E1" stroke-dasharray="3 5"/>
+          <g data-depth="0.03">
+            <text x="404" y="24" font-family="Kanit" font-size="12" fill="#0284C7" text-anchor="middle">ดวงอาทิตย์เป็นศูนย์กลาง</text>
+            <circle cx="404" cy="170" r="118" fill="none" stroke="#E2E8F0"/>
+            <circle cx="404" cy="170" r="86" fill="none" stroke="#E2E8F0"/>
+            <circle cx="404" cy="170" r="54" fill="none" stroke="#E2E8F0"/>
+            <circle cx="404" cy="170" r="28" fill="none" stroke="#E2E8F0"/>
+            <circle cx="404" cy="170" r="11" fill="#0284C7"/>
+            <circle cx="432" cy="170" r="3.5" fill="#94A3B8"/>
+            <circle cx="404" cy="116" r="4" fill="#94A3B8"/>
+            <circle cx="332" cy="196" r="6" fill="#0F172A"/>
+            <text x="332" y="216" font-family="Kanit" font-size="9.5" fill="#0F172A" text-anchor="middle">โลก</text>
+            <circle cx="510" cy="140" r="5" fill="#94A3B8"/>
+            <text x="404" y="312" font-family="Kanit" font-size="10" fill="#0284C7" text-anchor="middle">วงโคจรเรียบง่ายกว่ามาก</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 2 · Space Race → New Space ========== -->
+  <section class="slide">
+    <div class="grid">
+      <div>
+        <div class="eyebrow">หัวข้อ ๐๒ · ยุคบุกเบิกถึงปัจจุบัน</div>
+        <h1>จากการแข่งขัน<br>สู่ยุคที่ใครก็ไปอวกาศได้</h1>
+        <p class="lede">อวกาศเคยเป็นสนามประลองของสองมหาอำนาจ วันนี้มันคือธุรกิจ — เพราะจรวดกลับมาลงจอดแล้วบินซ้ำได้</p>
+        <div class="blocks">
+          <div class="block"><b>ยุค Space Race</b><span>รัฐลงทุน จรวดใช้ครั้งเดียวทิ้ง ต้นทุนต่อกิโลกรัมสูงมหาศาล</span></div>
+          <div class="block"><b>ยุค New Space</b><span>เอกชนนำ จรวดใช้ซ้ำได้ ต้นทุนต่อกิโลกรัมลดลงกว่า 20 เท่า</span></div>
+        </div>
+      </div>
+      <div class="figure">
+        <svg viewBox="0 0 560 340" role="img" aria-label="เส้นเวลายุคอวกาศและกราฟต้นทุนการส่งของขึ้นสู่วงโคจร">
+          <g data-depth="0.02">
+            <line x1="40" y1="86" x2="530" y2="86" stroke="#CBD5E1"/>
+            <g font-family="Kanit" font-size="9.5" fill="#475569" text-anchor="middle">
+              <circle cx="60"  cy="86" r="4" fill="#0F172A"/><text x="60"  y="70">1957</text><text x="60"  y="106" font-size="9">สปุตนิก</text>
+              <circle cx="150" cy="86" r="4" fill="#0F172A"/><text x="150" y="70">1961</text><text x="150" y="106" font-size="9">กาการิน</text>
+              <circle cx="245" cy="86" r="5.5" fill="#0F172A"/><text x="245" y="70">1969</text><text x="245" y="106" font-size="9">อะพอลโล 11</text>
+              <circle cx="340" cy="86" r="4" fill="#0F172A"/><text x="340" y="70">1981</text><text x="340" y="106" font-size="9">กระสวยอวกาศ</text>
+              <circle cx="430" cy="86" r="4" fill="#0284C7"/><text x="430" y="70" fill="#0284C7">2020</text><text x="430" y="106" font-size="9" fill="#0284C7">ครูว์ดรากอน</text>
+              <circle cx="512" cy="86" r="5.5" fill="#0284C7"/><text x="512" y="70" fill="#0284C7">2026</text><text x="512" y="106" font-size="9" fill="#0284C7">อาร์เทมิส 2</text>
+            </g>
+          </g>
+          <g data-depth="0.045">
+            <text x="40" y="152" font-family="Kanit" font-size="11" fill="#475569">ต้นทุนส่งของขึ้นวงโคจร (ต่อกิโลกรัม)</text>
+            <line x1="40" y1="300" x2="530" y2="300" stroke="#CBD5E1"/>
+            <line x1="40" y1="168" x2="40" y2="300" stroke="#CBD5E1"/>
+            <path d="M60 178 C 190 190, 300 250, 512 288" fill="none" stroke="#0284C7" stroke-width="2.5"/>
+            <path d="M60 178 C 190 190, 300 250, 512 288 L512 300 L60 300 Z" fill="#0284C7" opacity="0.06"/>
+            <circle cx="60" cy="178" r="4" fill="#0284C7"/>
+            <circle cx="512" cy="288" r="4" fill="#0284C7"/>
+            <text x="72" y="176" font-family="Kanit" font-size="10" fill="#0F172A">ยุคใช้ครั้งเดียวทิ้ง</text>
+            <text x="500" y="278" font-family="Kanit" font-size="10" fill="#0284C7" text-anchor="end">ยุคจรวดใช้ซ้ำ</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 3 · ดวงตาบนโลก ========== -->
+  <section class="slide">
+    <div class="grid">
+      <div>
+        <div class="eyebrow">หัวข้อ ๐๓ · ดวงตาบนโลก</div>
+        <h1>กล้องโทรทรรศน์<br>สองวิธีในการรวมแสง</h1>
+        <p class="lede">หักเหด้วยเลนส์ หรือสะท้อนด้วยกระจก — ทั้งคู่ทำสิ่งเดียวกัน คือรวมแสงให้มากกว่าที่ตาเราทำได้</p>
+        <div class="blocks">
+          <div class="block"><b>หักเหแสง (Refractor)</b><span>ใช้เลนส์ ภาพคมชัด แต่เลนส์ใหญ่จะหนักและหย่อนตัวด้วยน้ำหนักตัวเอง</span></div>
+          <div class="block"><b>สะท้อนแสง (Reflector)</b><span>ใช้กระจก สร้างขนาดใหญ่ได้ กล้องยักษ์ทุกตัวบนโลกจึงเป็นแบบนี้</span></div>
+          <div class="block"><b>ข้อจำกัดที่แก้ไม่ได้</b><span>บรรยากาศทำให้ภาพสั่นไหว มลภาวะแสงกลบดาวจาง และเมฆฝนหยุดการสังเกตการณ์</span></div>
+        </div>
+      </div>
+      <div class="figure">
+        <svg viewBox="0 0 520 340" role="img" aria-label="ไดอะแกรมทางเดินแสงของกล้องหักเหแสงและกล้องสะท้อนแสง">
+          <g data-depth="0.018">
+            <text x="20" y="24" font-family="Kanit" font-size="11.5" fill="#0F172A">หักเหแสง — แสงผ่านเลนส์</text>
+            <line x1="20" y1="52" x2="120" y2="52" stroke="#94A3B8" stroke-width="1.2"/>
+            <line x1="20" y1="76" x2="120" y2="76" stroke="#94A3B8" stroke-width="1.2"/>
+            <line x1="20" y1="100" x2="120" y2="100" stroke="#94A3B8" stroke-width="1.2"/>
+            <ellipse cx="126" cy="76" rx="9" ry="30" fill="#0284C7" opacity=".16" stroke="#0284C7"/>
+            <path d="M132 52 L300 76" stroke="#0284C7" stroke-width="1.2" fill="none"/>
+            <path d="M132 76 L300 76" stroke="#0284C7" stroke-width="1.2" fill="none"/>
+            <path d="M132 100 L300 76" stroke="#0284C7" stroke-width="1.2" fill="none"/>
+            <circle cx="300" cy="76" r="4" fill="#0F172A"/>
+            <path d="M300 76 L360 62 M300 76 L360 90" stroke="#CBD5E1"/>
+            <ellipse cx="370" cy="76" rx="6" ry="18" fill="#0F172A" opacity=".12" stroke="#94A3B8"/>
+            <text x="392" y="80" font-family="Kanit" font-size="10" fill="#475569">ตา</text>
+            <rect x="20" y="36" width="360" height="80" fill="none" stroke="#E2E8F0" rx="6"/>
+          </g>
+          <g data-depth="0.038">
+            <text x="20" y="176" font-family="Kanit" font-size="11.5" fill="#0F172A">สะท้อนแสง — แสงตกกระทบกระจก</text>
+            <line x1="20" y1="204" x2="330" y2="204" stroke="#94A3B8" stroke-width="1.2"/>
+            <line x1="20" y1="232" x2="330" y2="232" stroke="#94A3B8" stroke-width="1.2"/>
+            <line x1="20" y1="260" x2="330" y2="260" stroke="#94A3B8" stroke-width="1.2"/>
+            <path d="M336 186 Q 356 232 336 278" fill="none" stroke="#0284C7" stroke-width="3"/>
+            <path d="M330 204 L228 228 M330 232 L228 232 M330 260 L228 236" stroke="#0284C7" stroke-width="1.2"/>
+            <line x1="222" y1="212" x2="222" y2="252" stroke="#0F172A" stroke-width="2.5"/>
+            <path d="M222 232 L222 300" stroke="#0284C7" stroke-width="1.2"/>
+            <circle cx="222" cy="300" r="4" fill="#0F172A"/>
+            <text x="238" y="304" font-family="Kanit" font-size="10" fill="#475569">จุดโฟกัส</text>
+            <rect x="20" y="180" width="360" height="136" fill="none" stroke="#E2E8F0" rx="6"/>
+          </g>
+          <g data-depth="0.06">
+            <rect x="404" y="36" width="104" height="280" rx="8" fill="#0F172A" opacity=".03" stroke="#E2E8F0"/>
+            <text x="456" y="62" font-family="Kanit" font-size="10.5" fill="#0F172A" text-anchor="middle">ข้อจำกัด</text>
+            <g font-family="Kanit" font-size="9.5" fill="#475569" text-anchor="middle">
+              <text x="456" y="112">บรรยากาศ</text><text x="456" y="128">ทำภาพสั่นไหว</text>
+              <text x="456" y="180">มลภาวะแสง</text><text x="456" y="196">กลบดาวจาง</text>
+              <text x="456" y="248">เมฆฝน</text><text x="456" y="264">หยุดการสังเกต</text>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 4 · ดวงตาในอวกาศ + เจาะลึก A ========== -->
+  <section class="slide">
+    <div class="grid">
+      <div>
+        <div class="eyebrow">หัวข้อ ๐๔ · ดวงตาในอวกาศ</div>
+        <h1>มองเห็นสิ่งที่<br>ตาเรามองไม่เห็น</h1>
+        <p class="lede">แสงที่ตาเห็นเป็นเพียงเสี้ยวเดียวของคลื่นแม่เหล็กไฟฟ้าทั้งหมด กล้องอวกาศเปิดช่องที่เหลือให้เรา</p>
+        <div class="blocks">
+          <div class="block"><b>เหนือบรรยากาศ ภาพจึงนิ่ง</b><span>ไม่มีอากาศมารบกวน และมองคลื่นที่บรรยากาศดูดกลืนไว้ได้</span></div>
+          <div class="block"><b>รังสีเอกซ์ = สิ่งที่ร้อนจัด</b><span>เผยแก๊สรอบหลุมดำและซากซูเปอร์โนวา</span></div>
+          <div class="block"><b>อินฟราเรด = สิ่งที่อยู่ไกลและเย็น</b><span>ทะลุกลุ่มฝุ่นไปเห็นดาวฤกษ์ที่กำลังก่อตัว</span></div>
+        </div>
+        <button class="deep" data-ov="ovA"><i></i>เจาะลึก — เข้าไปข้างในหลุมดำ 360°</button>
+      </div>
+      <div class="figure">
+        <svg viewBox="0 0 520 340" role="img" aria-label="แถบสเปกตรัมคลื่นแม่เหล็กไฟฟ้าและกล้องที่ใช้สังเกตแต่ละช่วงคลื่น">
+          <g data-depth="0.025">
+            <text x="20" y="30" font-family="Kanit" font-size="11.5" fill="#0F172A">สเปกตรัมคลื่นแม่เหล็กไฟฟ้า</text>
+            <rect x="20" y="48" width="480" height="26" rx="4" fill="#0F172A" opacity=".07"/>
+            <rect x="248" y="48" width="26" height="26" rx="3" fill="#0284C7"/>
+            <text x="261" y="94" font-family="Kanit" font-size="9.5" fill="#0284C7" text-anchor="middle">แสงที่ตาเห็น</text>
+            <text x="24" y="94" font-family="Kanit" font-size="9.5" fill="#475569">วิทยุ</text>
+            <text x="496" y="94" font-family="Kanit" font-size="9.5" fill="#475569" text-anchor="end">รังสีแกมมา</text>
+            <line x1="261" y1="98" x2="261" y2="112" stroke="#0284C7"/>
+          </g>
+          <g data-depth="0.05" font-family="Kanit">
+            <rect x="20" y="128" width="150" height="86" rx="8" fill="#fff" stroke="#E2E8F0"/>
+            <text x="34" y="152" font-size="11.5" fill="#0F172A">คลื่นวิทยุ</text>
+            <text x="34" y="172" font-size="9.5" fill="#475569">จานรับสัญญาณขนาดใหญ่</text>
+            <text x="34" y="188" font-size="9.5" fill="#475569">ถ่ายภาพเงาหลุมดำได้</text>
+            <text x="34" y="204" font-size="9.5" fill="#0284C7">Event Horizon Telescope</text>
+
+            <rect x="185" y="128" width="150" height="86" rx="8" fill="#fff" stroke="#E2E8F0"/>
+            <text x="199" y="152" font-size="11.5" fill="#0F172A">รังสีเอกซ์</text>
+            <text x="199" y="172" font-size="9.5" fill="#475569">มองสิ่งที่ร้อนหลายล้านองศา</text>
+            <text x="199" y="188" font-size="9.5" fill="#475569">แก๊สรอบหลุมดำ</text>
+            <text x="199" y="204" font-size="9.5" fill="#0284C7">Chandra</text>
+
+            <rect x="350" y="128" width="150" height="86" rx="8" fill="#fff" stroke="#E2E8F0"/>
+            <text x="364" y="152" font-size="11.5" fill="#0F172A">อินฟราเรด</text>
+            <text x="364" y="172" font-size="9.5" fill="#475569">ทะลุฝุ่นหนาทึบ</text>
+            <text x="364" y="188" font-size="9.5" fill="#475569">เห็นดาวที่เพิ่งเกิด</text>
+            <text x="364" y="204" font-size="9.5" fill="#0284C7">James Webb</text>
+          </g>
+          <g data-depth="0.08">
+            <path d="M20 258 Q 130 240 260 258 T 500 258" fill="none" stroke="#CBD5E1" stroke-dasharray="4 4"/>
+            <text x="260" y="286" font-family="Kanit" font-size="10" fill="#475569" text-anchor="middle">ขอบบรรยากาศโลก — เหนือเส้นนี้ไม่มีอะไรมาบดบัง</text>
+            <circle cx="90" cy="252" r="3.5" fill="#0284C7"/>
+            <circle cx="260" cy="248" r="3.5" fill="#0284C7"/>
+            <circle cx="430" cy="252" r="3.5" fill="#0284C7"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 5 · จรวด + ISS ========== -->
+  <section class="slide">
+    <div class="grid">
+      <div>
+        <div class="eyebrow">หัวข้อ ๐๕ · ๐๖ · พาหนะและบ้านในอวกาศ</div>
+        <h1>ต้องเร็วเท่าไร<br>ถึงจะหนีโลกได้</h1>
+        <p class="lede">จรวดดันตัวเองด้วยการพ่นมวลออกทางท้าย — แรงกิริยาเท่ากับแรงปฏิกิริยา และมันทำงานได้แม้ในสุญญากาศ</p>
+        <div class="blocks">
+          <div class="block"><b>7.9 กม./วินาที</b><span>ความเร็ววงโคจร — เร็วพอที่จะ "ตกแบบพลาดโลกไปเรื่อยๆ"</span></div>
+          <div class="block"><b>11.2 กม./วินาที</b><span>ความเร็วหลุดพ้น — เร็วพอจะไม่กลับมาอีกเลย</span></div>
+          <div class="block"><b>ISS โคจรสูง ~400 กม.</b><span>นักบินอวกาศไม่ได้ "ไร้แรงโน้มถ่วง" แต่กำลังตกอิสระพร้อมสถานีตลอดเวลา</span></div>
+        </div>
+      </div>
+      <div class="figure">
+        <svg viewBox="0 0 520 340" role="img" aria-label="ไดอะแกรมความเร็ววงโคจรกับความเร็วหลุดพ้น และวงโคจรสถานีอวกาศนานาชาติ">
+          <g data-depth="0.02">
+            <circle cx="150" cy="196" r="66" fill="#0F172A" opacity=".08" stroke="#0F172A"/>
+            <text x="150" y="200" font-family="Kanit" font-size="12" fill="#0F172A" text-anchor="middle">โลก</text>
+            <path d="M150 130 Q 250 100 258 196" fill="none" stroke="#94A3B8" stroke-dasharray="3 4"/>
+            <text x="268" y="120" font-family="Kanit" font-size="9.5" fill="#94A3B8">ช้าไป → ตกกลับ</text>
+          </g>
+          <g data-depth="0.04">
+            <ellipse cx="150" cy="196" rx="104" ry="104" fill="none" stroke="#0284C7" stroke-width="1.6"/>
+            <circle cx="150" cy="92" r="5" fill="#0284C7"/>
+            <text x="150" y="76" font-family="Kanit" font-size="10" fill="#0284C7" text-anchor="middle">7.9 กม./วิ — เข้าวงโคจร</text>
+          </g>
+          <g data-depth="0.07">
+            <path d="M216 196 C 300 150, 380 90, 500 46" fill="none" stroke="#0F172A" stroke-width="2"/>
+            <circle cx="500" cy="46" r="5" fill="#0F172A"/>
+            <text x="492" y="32" font-family="Kanit" font-size="10" fill="#0F172A" text-anchor="end">11.2 กม./วิ — หลุดพ้น</text>
+          </g>
+          <g data-depth="0.055">
+            <rect x="286" y="212" width="214" height="102" rx="8" fill="#fff" stroke="#E2E8F0"/>
+            <text x="300" y="236" font-family="Kanit" font-size="11.5" fill="#0F172A">สถานีอวกาศนานาชาติ</text>
+            <line x1="312" y1="266" x2="474" y2="266" stroke="#0F172A" stroke-width="2.5"/>
+            <rect x="376" y="258" width="34" height="16" rx="3" fill="#0F172A"/>
+            <rect x="312" y="250" width="26" height="32" rx="2" fill="#0284C7" opacity=".5"/>
+            <rect x="448" y="250" width="26" height="32" rx="2" fill="#0284C7" opacity=".5"/>
+            <text x="300" y="300" font-family="Kanit" font-size="9.5" fill="#475569">สูง ~400 กม. · โคจรครบรอบใน ~90 นาที</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 6 · ดวงจันทร์ + ดาวอังคาร + เจาะลึก B ========== -->
+  <section class="slide">
+    <div class="grid">
+      <div>
+        <div class="eyebrow">หัวข้อ ๐๗ · เพื่อนบ้านใกล้เคียง</div>
+        <h1>กลับไปดวงจันทร์<br>และตั้งหลักบนดาวอังคาร</h1>
+        <p class="lede">ครั้งนี้เราไม่ได้ไปปักธงแล้วกลับ แต่ไปเพื่ออยู่ให้ได้นาน</p>
+        <div class="blocks">
+          <div class="block"><b>อะพอลโล · 1969–1972</b><span>มนุษย์ 12 คนเดินบนดวงจันทร์ นำหินกลับมากว่า 380 กิโลกรัม</span></div>
+          <div class="block"><b>อาร์เทมิส · ปัจจุบัน</b><span>เป้าหมายคือฐานถาวรที่ขั้วใต้ ซึ่งมีน้ำแข็งอยู่ในหลุมที่แสงส่องไม่ถึง</span></div>
+          <div class="block"><b>โรเวอร์บนดาวอังคาร</b><span>คิวริออซิตีและเพอร์เซเวียแรนซ์ทำหน้าที่เป็นนักธรณีวิทยาแทนเรา</span></div>
+        </div>
+        <button class="deep" data-ov="ovB"><i></i>เจาะลึก — อาร์เทมิส 2 และการค้นพบล่าสุดบนดาวอังคาร</button>
+      </div>
+      <div class="figure">
+        <svg viewBox="0 0 520 340" role="img" aria-label="เปรียบเทียบภารกิจอะพอลโลกับอาร์เทมิส และโรเวอร์สำรวจดาวอังคาร">
+          <g data-depth="0.022">
+            <circle cx="118" cy="104" r="62" fill="#0F172A" opacity=".06" stroke="#0F172A"/>
+            <circle cx="96" cy="86" r="9" fill="#0F172A" opacity=".12"/>
+            <circle cx="134" cy="120" r="13" fill="#0F172A" opacity=".12"/>
+            <circle cx="118" cy="150" r="7" fill="#0284C7" opacity=".35"/>
+            <text x="118" y="186" font-family="Kanit" font-size="11" fill="#0F172A" text-anchor="middle">ดวงจันทร์</text>
+            <text x="118" y="202" font-family="Kanit" font-size="9" fill="#0284C7" text-anchor="middle">ขั้วใต้ — มีน้ำแข็ง</text>
+          </g>
+          <g data-depth="0.045">
+            <path d="M188 104 L262 104" stroke="#CBD5E1" stroke-dasharray="4 4"/>
+            <text x="225" y="94" font-family="Kanit" font-size="9" fill="#94A3B8" text-anchor="middle">3 วัน</text>
+            <circle cx="300" cy="104" r="16" fill="#0284C7" opacity=".14" stroke="#0284C7"/>
+            <text x="300" y="108" font-family="Kanit" font-size="9" fill="#0284C7" text-anchor="middle">โลก</text>
+            <path d="M338 104 L410 104" stroke="#CBD5E1" stroke-dasharray="4 4"/>
+            <text x="374" y="94" font-family="Kanit" font-size="9" fill="#94A3B8" text-anchor="middle">7 เดือน</text>
+            <circle cx="452" cy="104" r="34" fill="#0F172A" opacity=".08" stroke="#0F172A"/>
+            <text x="452" y="108" font-family="Kanit" font-size="10.5" fill="#0F172A" text-anchor="middle">ดาวอังคาร</text>
+          </g>
+          <g data-depth="0.07">
+            <rect x="20" y="228" width="480" height="94" rx="10" fill="#fff" stroke="#E2E8F0"/>
+            <text x="40" y="254" font-family="Kanit" font-size="11.5" fill="#0F172A">หน้าที่ของโรเวอร์</text>
+            <g font-family="Kanit" font-size="9.5" fill="#475569">
+              <circle cx="48" cy="282" r="3.5" fill="#0284C7"/><text x="60" y="286">เจาะเก็บตัวอย่างหิน</text>
+              <circle cx="196" cy="282" r="3.5" fill="#0284C7"/><text x="208" y="286">วิเคราะห์เคมีในตัว</text>
+              <circle cx="344" cy="282" r="3.5" fill="#0284C7"/><text x="356" y="286">มองหาร่องรอยสิ่งมีชีวิต</text>
+            </g>
+            <text x="40" y="308" font-family="Kanit" font-size="9" fill="#94A3B8">สัญญาณวิทยุใช้เวลาเดินทางจากโลกถึงดาวอังคาร 4–24 นาที — โรเวอร์จึงต้องตัดสินใจเองได้บางส่วน</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 7 · ดวงอาทิตย์ + ดาวเคราะห์น้อย ========== -->
+  <section class="slide">
+    <div class="grid">
+      <div>
+        <div class="eyebrow">หัวข้อ ๐๘ · ไขปริศนากำเนิด</div>
+        <h1>หินที่ไม่เคยเปลี่ยน<br>ตลอด 4,600 ล้านปี</h1>
+        <p class="lede">ดาวเคราะห์น้อยคือแคปซูลกาลเวลาของจริง — เศษวัสดุตั้งต้นของระบบสุริยะที่ไม่เคยถูกหลอมละลาย</p>
+        <div class="blocks">
+          <div class="block"><b>เข้าใกล้ดวงอาทิตย์</b><span>ยานพาร์กเกอร์บินฝ่าโคโรนาเพื่อหาคำตอบว่าทำไมชั้นนอกร้อนกว่าผิวหลายร้อยเท่า</span></div>
+          <div class="block"><b>เก็บตัวอย่างกลับโลก</b><span>ฮายาบูซะ 2 และโอไซริส-เร็กซ์ นำผงจากดาวเคราะห์น้อยกลับมาให้ห้องแล็บบนโลกวิเคราะห์</span></div>
+          <div class="block"><b>ทำไมจึงสำคัญ</b><span>ในผงเหล่านั้นพบสารอินทรีย์และร่องรอยของน้ำ — วัตถุดิบตั้งต้นของสิ่งมีชีวิต</span></div>
+        </div>
+      </div>
+      <div class="figure">
+        <svg viewBox="0 0 520 340" role="img" aria-label="ยานสำรวจดวงอาทิตย์และภารกิจเก็บตัวอย่างดาวเคราะห์น้อย">
+          <g data-depth="0.02">
+            <circle cx="112" cy="150" r="54" fill="#0284C7" opacity=".14"/>
+            <circle cx="112" cy="150" r="38" fill="#0284C7" opacity=".3"/>
+            <circle cx="112" cy="150" r="24" fill="#0F172A"/>
+            <text x="112" y="228" font-family="Kanit" font-size="11" fill="#0F172A" text-anchor="middle">ดวงอาทิตย์</text>
+            <text x="112" y="244" font-family="Kanit" font-size="9" fill="#475569" text-anchor="middle">โคโรนาร้อนกว่าผิวหลายร้อยเท่า</text>
+          </g>
+          <g data-depth="0.055">
+            <ellipse cx="112" cy="150" rx="88" ry="46" fill="none" stroke="#0F172A" stroke-dasharray="3 4"/>
+            <circle cx="200" cy="150" r="4.5" fill="#0F172A"/>
+            <text x="212" y="146" font-family="Kanit" font-size="9.5" fill="#0F172A">ยานพาร์กเกอร์</text>
+          </g>
+          <g data-depth="0.04">
+            <path d="M300 76 l16 -8 l18 10 l6 18 l-12 16 l-20 2 l-14 -14 z" fill="#0F172A" opacity=".14" stroke="#0F172A"/>
+            <text x="356" y="92" font-family="Kanit" font-size="10.5" fill="#0F172A">ดาวเคราะห์น้อย</text>
+            <text x="356" y="108" font-family="Kanit" font-size="9" fill="#475569">อายุ 4,600 ล้านปี</text>
+            <path d="M330 120 L330 176" stroke="#0284C7" stroke-dasharray="3 3"/>
+            <path d="M326 170 l4 8 l4 -8" fill="#0284C7"/>
+            <rect x="272" y="184" width="228" height="66" rx="8" fill="#fff" stroke="#E2E8F0"/>
+            <text x="288" y="208" font-family="Kanit" font-size="10.5" fill="#0F172A">สิ่งที่พบในตัวอย่าง</text>
+            <text x="288" y="230" font-family="Kanit" font-size="9.5" fill="#475569">สารอินทรีย์คาร์บอน · แร่ที่เกิดจากน้ำ · กรดอะมิโน</text>
+          </g>
+          <g data-depth="0.075">
+            <text x="386" y="288" font-family="Kanit" font-size="9.5" fill="#0284C7" text-anchor="middle">"แคปซูลกาลเวลา" ที่ธรรมชาติเก็บไว้ให้เราเอง</text>
+            <line x1="272" y1="270" x2="500" y2="270" stroke="#CBD5E1"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 8 · สุดขอบระบบสุริยะ ========== -->
+  <section class="slide">
+    <div class="grid">
+      <div>
+        <div class="eyebrow">หัวข้อ ๐๙ · สุดขอบระบบสุริยะ</div>
+        <h1>ยานที่ออกไปไกล<br>เกินขอบเขตของดวงอาทิตย์</h1>
+        <p class="lede">ยานวอยเอจเจอร์ออกเดินทางตั้งแต่ปี 1977 และยังส่งสัญญาณกลับมาจนถึงทุกวันนี้</p>
+        <div class="blocks">
+          <div class="block"><b>ดาวพฤหัสบดีและดาวเสาร์</b><span>ยานจูโนและแคสสินีเผยพายุยักษ์ วงแหวนน้ำแข็ง และดวงจันทร์ที่มีมหาสมุทรใต้เปลือก</span></div>
+          <div class="block"><b>เฮลิโอพอส</b><span>จุดที่ลมสุริยะสิ้นสุดและปะทะกับอวกาศระหว่างดาว</span></div>
+          <div class="block"><b>เมฆออร์ท</b><span>ขอบแรงโน้มถ่วงของดวงอาทิตย์ ไกลกว่า 1 ปีแสง — วอยเอจเจอร์ต้องใช้เวลาอีกหลายหมื่นปีจึงจะพ้น</span></div>
+        </div>
+      </div>
+      <div class="figure">
+        <svg viewBox="0 0 520 340" role="img" aria-label="แผนภาพระยะทางจากดวงอาทิตย์ถึงเมฆออร์ทในมาตราส่วนลอการิทึม">
+          <g data-depth="0.025">
+            <line x1="46" y1="250" x2="500" y2="250" stroke="#CBD5E1"/>
+            <text x="46" y="290" font-family="Kanit" font-size="9" fill="#94A3B8">มาตราส่วนลอการิทึม — แต่ละช่วงคือระยะทางที่มากขึ้นสิบเท่า</text>
+            <g font-family="Kanit" font-size="9.5" fill="#475569" text-anchor="middle">
+              <circle cx="46"  cy="250" r="7" fill="#0284C7"/><text x="46"  y="272">ดวงอาทิตย์</text>
+              <circle cx="130" cy="250" r="4" fill="#0F172A"/><text x="130" y="272">โลก · 1 AU</text>
+              <circle cx="206" cy="250" r="6" fill="#0F172A"/><text x="206" y="272">ดาวพฤหัสบดี</text>
+              <circle cx="258" cy="250" r="5.5" fill="#0F172A"/><text x="258" y="272">ดาวเสาร์</text>
+              <circle cx="330" cy="250" r="4" fill="#0F172A"/><text x="330" y="272">แถบไคเปอร์</text>
+              <circle cx="400" cy="250" r="4" fill="#0284C7"/><text x="400" y="272" fill="#0284C7">เฮลิโอพอส</text>
+              <circle cx="490" cy="250" r="4" fill="#0284C7"/><text x="490" y="272" fill="#0284C7">เมฆออร์ท</text>
+            </g>
+          </g>
+          <g data-depth="0.05">
+            <path d="M46 250 C 160 190, 300 200, 412 172" fill="none" stroke="#0F172A" stroke-width="1.6" stroke-dasharray="5 4"/>
+            <circle cx="412" cy="172" r="5" fill="#0F172A"/>
+            <text x="412" y="158" font-family="Kanit" font-size="10.5" fill="#0F172A" text-anchor="middle">วอยเอจเจอร์ 1</text>
+            <text x="412" y="142" font-family="Kanit" font-size="9" fill="#475569" text-anchor="middle">ออกเดินทาง 1977 · ยังส่งสัญญาณอยู่</text>
+          </g>
+          <g data-depth="0.08">
+            <rect x="46" y="42" width="200" height="72" rx="8" fill="#fff" stroke="#E2E8F0"/>
+            <text x="62" y="66" font-family="Kanit" font-size="10.5" fill="#0F172A">สัญญาณจากวอยเอจเจอร์</text>
+            <text x="62" y="88" font-family="Kanit" font-size="9.5" fill="#475569">ใช้เวลาเดินทางถึงโลกกว่า 22 ชั่วโมง</text>
+            <text x="62" y="104" font-family="Kanit" font-size="9" fill="#94A3B8">แม้แสงจะเร็วที่สุดในจักรวาลแล้วก็ตาม</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 9 · ดาวเทียม ========== -->
+  <section class="slide">
+    <div class="grid">
+      <div>
+        <div class="eyebrow">หัวข้อ ๑๐ · ๑๑ · ฮีโร่เหนือฟ้า</div>
+        <h1>เทคโนโลยีอวกาศ<br>ที่คุณใช้ทุกวันโดยไม่รู้ตัว</h1>
+        <p class="lede">ทุกครั้งที่เปิดแอปพยากรณ์อากาศหรือกดนำทาง คุณกำลังใช้งานดาวเทียมอยู่</p>
+        <div class="blocks">
+          <div class="block"><b>วงโคจรต่ำ · LEO</b><span>สำรวจทรัพยากร ติดตามไฟป่าและน้ำท่วม ภาพละเอียดสูงแต่ผ่านจุดเดิมเป็นช่วงๆ</span></div>
+          <div class="block"><b>วงโคจรกลาง · MEO</b><span>ระบบนำทาง GPS — เครื่องรับต้องเห็นดาวเทียมอย่างน้อย 4 ดวงจึงระบุตำแหน่งได้</span></div>
+          <div class="block"><b>วงโคจรค้างฟ้า · GEO</b><span>อุตุนิยมวิทยาและการสื่อสาร ลอยนิ่งเหนือจุดเดิมตลอดเวลา จึงจับภาพพายุได้ต่อเนื่อง</span></div>
+        </div>
+      </div>
+      <div class="figure">
+        <svg viewBox="0 0 520 340" role="img" aria-label="ระดับวงโคจรดาวเทียม LEO MEO GEO และการใช้งานแต่ละแบบ">
+          <g data-depth="0.02">
+            <circle cx="150" cy="180" r="46" fill="#0F172A" opacity=".08" stroke="#0F172A"/>
+            <text x="150" y="184" font-family="Kanit" font-size="11" fill="#0F172A" text-anchor="middle">โลก</text>
+          </g>
+          <g data-depth="0.04">
+            <circle cx="150" cy="180" r="70" fill="none" stroke="#0284C7" stroke-width="1.4"/>
+            <circle cx="150" cy="110" r="4.5" fill="#0284C7"/>
+            <circle cx="220" cy="180" r="4.5" fill="#0284C7"/>
+            <text x="150" y="96" font-family="Kanit" font-size="9.5" fill="#0284C7" text-anchor="middle">LEO</text>
+          </g>
+          <g data-depth="0.06">
+            <circle cx="150" cy="180" r="104" fill="none" stroke="#94A3B8" stroke-width="1.2" stroke-dasharray="4 4"/>
+            <circle cx="254" cy="180" r="4" fill="#475569"/>
+            <circle cx="150" cy="76" r="4" fill="#475569"/>
+            <circle cx="76" cy="106" r="4" fill="#475569"/>
+            <text x="150" y="62" font-family="Kanit" font-size="9.5" fill="#475569" text-anchor="middle">MEO · GPS</text>
+          </g>
+          <g data-depth="0.085">
+            <circle cx="150" cy="180" r="140" fill="none" stroke="#0F172A" stroke-width="1"/>
+            <circle cx="290" cy="180" r="5" fill="#0F172A"/>
+            <text x="304" y="184" font-family="Kanit" font-size="9.5" fill="#0F172A">GEO</text>
+          </g>
+          <g data-depth="0.05" font-family="Kanit">
+            <rect x="330" y="52" width="176" height="60" rx="8" fill="#fff" stroke="#E2E8F0"/>
+            <text x="346" y="76" font-size="11" fill="#0F172A">พยากรณ์และเตือนภัย</text>
+            <text x="346" y="96" font-size="9.5" fill="#475569">จับตาพายุ น้ำท่วม ไฟป่า</text>
+
+            <rect x="330" y="126" width="176" height="60" rx="8" fill="#fff" stroke="#E2E8F0"/>
+            <text x="346" y="150" font-size="11" fill="#0F172A">สื่อสารและนำทาง</text>
+            <text x="346" y="170" font-size="9.5" fill="#475569">อินเทอร์เน็ต โทรศัพท์ GPS</text>
+
+            <rect x="330" y="200" width="176" height="60" rx="8" fill="#fff" stroke="#E2E8F0"/>
+            <text x="346" y="224" font-size="11" fill="#0F172A">สำรวจทรัพยากร</text>
+            <text x="346" y="244" font-size="9.5" fill="#475569">พื้นที่เกษตร ป่าไม้ ผังเมือง</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 10 · คนไทย + ดาราศาสตร์ใกล้ตัว + เจาะลึก C ========== -->
+  <section class="slide">
+    <div class="grid">
+      <div>
+        <div class="eyebrow">หัวข้อ ๑๒ · ๑๓ · คนไทยสู่อวกาศ</div>
+        <h1>ไทยไม่ได้เป็นแค่ผู้ใช้<br>แต่กำลังเป็นผู้สร้าง</h1>
+        <p class="lede">จากประเทศที่ซื้อภาพถ่ายดาวเทียม สู่ประเทศที่ออกแบบและประกอบดาวเทียมด้วยฝีมือวิศวกรไทย</p>
+        <div class="blocks">
+          <div class="block"><b>THEOS-2</b><span>ดาวเทียมสำรวจทรัพยากรความละเอียดสูง ยกระดับงานภูมิสารสนเทศของประเทศ</span></div>
+          <div class="block"><b>ภาคีความร่วมมืออวกาศไทย (TSC)</b><span>สถาบันวิจัยและมหาวิทยาลัยไทยร่วมกันออกแบบและสร้างดาวเทียมเอง</span></div>
+          <div class="block"><b>ดาราศาสตร์ใกล้ตัว</b><span>ความรู้เรื่องเฟสดวงจันทร์และทิศทางท้องฟ้า ใช้วางแผนดูดาวและถ่ายภาพทางช้างเผือกได้จริง</span></div>
+        </div>
+        <button class="deep" data-ov="ovC"><i></i>เจาะลึก — ผลึกโปรตีนไทยที่เพาะบนสถานีอวกาศ</button>
+      </div>
+      <div class="figure">
+        <svg viewBox="0 0 520 340" role="img" aria-label="บทบาทของประเทศไทยในเทคโนโลยีอวกาศและการวางแผนดูดาว">
+          <g data-depth="0.025">
+            <rect x="20" y="34" width="230" height="126" rx="10" fill="#fff" stroke="#E2E8F0"/>
+            <text x="40" y="60" font-family="Kanit" font-size="11.5" fill="#0F172A">ดาวเทียมสำรวจ THEOS-2</text>
+            <rect x="96" y="84" width="78" height="30" rx="3" fill="#0F172A"/>
+            <rect x="52" y="80" width="38" height="38" rx="2" fill="#0284C7" opacity=".45"/>
+            <rect x="180" y="80" width="38" height="38" rx="2" fill="#0284C7" opacity=".45"/>
+            <path d="M135 118 L135 148" stroke="#0284C7" stroke-dasharray="2 3"/>
+            <path d="M120 148 L150 148" stroke="#0F172A" stroke-width="2"/>
+            <text x="135" y="164" font-family="Kanit" font-size="9" fill="#475569" text-anchor="middle">ถ่ายภาพพื้นที่เกษตรและภัยพิบัติ</text>
+          </g>
+          <g data-depth="0.05">
+            <rect x="268" y="34" width="232" height="126" rx="10" fill="#fff" stroke="#E2E8F0"/>
+            <text x="288" y="60" font-family="Kanit" font-size="11.5" fill="#0F172A">ภาคีความร่วมมืออวกาศไทย</text>
+            <g font-family="Kanit" font-size="9.5" fill="#475569">
+              <circle cx="296" cy="86" r="3.5" fill="#0284C7"/><text x="308" y="90">ออกแบบและสร้างดาวเทียมในประเทศ</text>
+              <circle cx="296" cy="112" r="3.5" fill="#0284C7"/><text x="308" y="116">สร้างวิศวกรอวกาศรุ่นใหม่</text>
+              <circle cx="296" cy="138" r="3.5" fill="#0284C7"/><text x="308" y="142">ร่วมมือกับโครงการระดับนานาชาติ</text>
+            </g>
+          </g>
+          <g data-depth="0.08">
+            <rect x="20" y="182" width="480" height="132" rx="10" fill="#0284C7" opacity=".04"/>
+            <text x="40" y="208" font-family="Kanit" font-size="11.5" fill="#0F172A">ดาราศาสตร์ใกล้ตัว — วางแผนดูดาวอย่างไรให้เห็นจริง</text>
+            <g font-family="Kanit" font-size="9.5" fill="#475569">
+              <text x="40" y="238">๑ · เลือกคืนที่ดวงจันทร์ใกล้ข้างแรม ท้องฟ้าจะมืดพอให้เห็นดาวจาง</text>
+              <text x="40" y="262">๒ · ออกห่างเมืองเพื่อหนีมลภาวะแสง และปล่อยให้ตาปรับความมืดราว 20 นาที</text>
+              <text x="40" y="286">๓ · ฤดูร้อนหันไปทางทิศใต้หลังเที่ยงคืน จะเห็นใจกลางทางช้างเผือกพาดผ่าน</text>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 11 · นวัตกรรม ========== -->
+  <section class="slide">
+    <div class="grid">
+      <div>
+        <div class="eyebrow">ความท้าทายที่ ๓ · นวัตกรรมกู้วิกฤต</div>
+        <h1>ภายในจุดเอกฐาน<br><span style="color:var(--accent);font-size:.55em;font-weight:400">INSIDE THE SINGULARITY</span></h1>
+        <p class="lede">ดาวเทียมเก็บขยะอวกาศที่ไม่ไล่จับอะไรเลย — แต่ทำให้ขยะไหลเข้าหาตัวเอง เหมือนที่หลุมดำทำ</p>
+        <div class="layers">
+          <div class="layer on" data-layer="0">
+            <div class="n">๑</div>
+            <div><h3>จานพอกพูน — ใบเรือไฟฟ้าสถิต</h3>
+              <p>กางใบเรือประจุไฟฟ้าเส้นผ่านศูนย์กลาง 50 เมตร ดึงเศษโลหะและสะเก็ดสีให้ไหลวนเข้าหาศูนย์กลางเอง โดยไม่ต้องเผาเชื้อเพลิงไล่ตาม</p></div>
+          </div>
+          <div class="layer" data-layer="1">
+            <div class="n">๒</div>
+            <div><h3>ขอบฟ้าเหตุการณ์ — ตาข่ายแอโรเจล</h3>
+              <p>ชั้นแอโรเจลซ้อนกันหลายชั้นค่อยๆ หน่วงเศษความเร็ว 7 กม./วินาที ให้หยุดโดยไม่แตกกระจายเป็นขยะเพิ่ม</p></div>
+          </div>
+          <div class="layer" data-layer="2">
+            <div class="n">๓</div>
+            <div><h3>จุดเอกฐาน — ห้องหลอมทรงเทสเซอแร็กต์</h3>
+              <p>เตาหลอมพลังงานแสงอาทิตย์อัดเศษโลหะเป็นแท่งวัตถุดิบ ป้อนเครื่องพิมพ์สามมิติในวงโคจร ขยะจึงกลับมาเป็นชิ้นส่วนใหม่</p></div>
+          </div>
+          <div class="layer" data-layer="3">
+            <div class="n">๔</div>
+            <div><h3>การระเหย — ปล่อยคืนสู่บรรยากาศ</h3>
+              <p>ส่วนที่ใช้ต่อไม่ได้ถูกปล่อยย้อนทิศวงโคจรให้ตกลงมาเผาไหม้หมดในบรรยากาศ ตัวเก็บจึงไม่มีวันเต็ม</p></div>
+          </div>
+        </div>
+        <div class="dt"><span>Design Thinking</span><span>Empathize</span><span>Define</span><span>Ideate</span><span>Prototype</span><span>Test</span></div>
+      </div>
+      <div class="figure">
+        <svg viewBox="0 0 460 400" id="innoSvg" role="img" aria-label="ภาพจำลองการทำงานสี่ชั้นของนวัตกรรมภายในจุดเอกฐาน">
+          <g data-depth="0.02">
+            <circle cx="230" cy="200" r="176" fill="none" stroke="#E2E8F0" stroke-dasharray="2 6"/>
+            <text x="230" y="392" font-family="Kanit" font-size="9.5" fill="#94A3B8" text-anchor="middle">ปฏิบัติการที่วงโคจรต่ำ ระดับความสูงราว 800 กิโลเมตร</text>
+          </g>
+          <!-- ชั้น 1 -->
+          <g class="lg" data-lg="0" data-depth="0.03">
+            <circle cx="230" cy="200" r="160" fill="none" stroke="#0284C7" stroke-width="1.2" opacity=".55"/>
+            <circle cx="230" cy="200" r="138" fill="none" stroke="#0284C7" stroke-width="1" opacity=".35"/>
+            <g id="debris"></g>
+          </g>
+          <!-- ชั้น 2 -->
+          <g class="lg" data-lg="1" data-depth="0.045">
+            <circle cx="230" cy="200" r="104" fill="#0F172A" opacity=".05"/>
+            <circle cx="230" cy="200" r="104" fill="none" stroke="#0F172A" stroke-width="1.4" stroke-dasharray="6 4"/>
+            <text x="230" y="82" font-family="Kanit" font-size="9.5" fill="#0F172A" text-anchor="middle">ขอบฟ้าเหตุการณ์</text>
+          </g>
+          <!-- ชั้น 3 -->
+          <g class="lg" data-lg="2" data-depth="0.07">
+            <rect x="188" y="158" width="84" height="84" fill="none" stroke="#0F172A" stroke-width="1.6"/>
+            <rect x="200" y="170" width="60" height="60" fill="none" stroke="#0F172A" stroke-width="1.2" opacity=".7"/>
+            <rect x="211" y="181" width="38" height="38" fill="none" stroke="#0F172A" stroke-width="1" opacity=".5"/>
+            <rect x="221" y="191" width="18" height="18" fill="#0F172A" opacity=".85"/>
+            <path d="M188 158 L200 170 M272 158 L260 170 M188 242 L200 230 M272 242 L260 230"
+                  stroke="#0F172A" stroke-width=".9" opacity=".5"/>
+          </g>
+          <!-- ชั้น 4 -->
+          <g class="lg" data-lg="3" data-depth="0.055">
+            <path d="M230 304 L230 356" stroke="#0284C7" stroke-width="1.4" stroke-dasharray="4 4"/>
+            <path d="M224 348 l6 10 l6 -10" fill="#0284C7"/>
+            <text x="248" y="344" font-family="Kanit" font-size="9.5" fill="#0284C7">ปล่อยกลับสู่บรรยากาศ</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 12 · ขอบคุณ ========== -->
+  <section class="slide">
+    <div class="grid" style="grid-template-columns:1fr">
+      <div style="max-width:760px">
+        <div class="eyebrow">สิ้นสุดการบันทึก</div>
+        <h1>ถึงผู้ที่เปิดแคปซูลนี้<br>ในอีกหลายพันปีข้างหน้า</h1>
+        <p class="lede" style="max-width:60ch;margin-top:18px">
+          เราเป็นสิ่งมีชีวิตบนดาวเคราะห์ดวงเล็กๆ ที่ใช้เวลาสองพันปีกว่าจะรู้ว่าตัวเองไม่ได้อยู่ศูนย์กลางของอะไรเลย
+          และใช้เวลาอีกไม่ถึงร้อยปีหลังจากนั้นในการออกไปดูด้วยตาตัวเอง
+        </p>
+        <div style="display:flex;gap:10px;margin-top:30px;flex-wrap:wrap">
+          <span class="tag">สถาบันวิจัยดาราศาสตร์แห่งชาติ · NARIT</span>
+          <span class="tag">สำนักงานพัฒนาเทคโนโลยีอวกาศและภูมิสารสนเทศ · GISTDA</span>
+        </div>
+        <p class="hint" style="margin-top:34px">มีคำถามหรือข้อเสนอแนะเพิ่มเติมไหม?</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ========== OVERLAY เจาะลึก A ========== -->
+<div class="ov" id="ovA">
+  <button class="close" data-close>✕</button>
+  <div class="wrap">
+    <div class="badge">แฟ้มลับที่ต้องขยายผล · ๐๑</div>
+    <h2>ถ่ายภาพสิ่งที่ไม่ปล่อยแสงออกมาเลย</h2>
+    <p class="lede" style="max-width:70ch">
+      หลุมดำไม่ปล่อยแสง เราจึงถ่ายภาพมันตรงๆ ไม่ได้ — สิ่งที่กล้อง Event Horizon Telescope ทำคือ
+      เชื่อมกล้องวิทยุทั่วโลกเข้าด้วยกันให้ทำงานเสมือนเป็นจานเดียวขนาดเท่าโลก แล้วถ่าย
+      <b>เงา</b> ของมันบนแก๊สร้อนที่อยู่ข้างหลัง
+    </p>
+    <div class="cards">
+      <div class="card"><div class="k">2019</div><div class="t">M87*</div>
+        <div class="d">ภาพหลุมดำภาพแรกในประวัติศาสตร์ อยู่ใจกลางกาแล็กซี M87 ห่างออกไปราว 55 ล้านปีแสง</div></div>
+      <div class="card"><div class="k">2022</div><div class="t">Sagittarius A*</div>
+        <div class="d">หลุมดำมวลมหาศาลใจกลางทางช้างเผือกของเราเอง มวลราว 4 ล้านเท่าของดวงอาทิตย์</div></div>
+      <div class="card"><div class="k">∞</div><div class="t">แล้วข้างในเป็นอย่างไร</div>
+        <div class="d">ไม่มีใครรู้ เพราะไม่มีข้อมูลใดหลุดออกมาได้ สิ่งที่ทำได้คือคำนวณจากทฤษฎีสัมพัทธภาพว่าเราจะ "เห็น" อะไร</div></div>
+    </div>
+    <button class="deep" id="goImm" style="margin-top:28px"><i></i>เข้าไปข้างใน — ประสบการณ์ 360°</button>
+    <div class="src">
+      <b>แหล่งอ้างอิง</b><br>
+      Event Horizon Telescope Collaboration — ภาพ M87* เผยแพร่เมษายน 2019 และภาพ Sagittarius A* เผยแพร่พฤษภาคม 2022<br>
+      ภาพจำลอง 360° ในสไลด์นี้คำนวณจากการโค้งงอของแสงตามทฤษฎีสัมพัทธภาพทั่วไป — เป็นแบบจำลองเพื่อการศึกษา ไม่ใช่ภาพถ่ายจริง
+    </div>
+  </div>
+</div>
+
+<!-- ========== OVERLAY เจาะลึก B ========== -->
+<div class="ov" id="ovB">
+  <button class="close" data-close>✕</button>
+  <div class="wrap">
+    <div class="badge">แฟ้มลับที่ต้องขยายผล · ๐๒</div>
+    <h2>ปี 2026 มนุษย์กลับไปเยือนดวงจันทร์อีกครั้ง</h2>
+    <p class="lede" style="max-width:70ch">
+      หลังจากว่างเว้นมากว่าห้าสิบปี ภารกิจอาร์เทมิส 2 ได้พามนุษย์ออกไปโคจรรอบดวงจันทร์
+      และในปีเดียวกันนั้นเอง โรเวอร์บนดาวอังคารก็ส่งผลวิเคราะห์ที่เปลี่ยนความเข้าใจของเราเรื่องต้นกำเนิดชีวิตกลับมา
+    </p>
+    <div class="cards">
+      <div class="card"><div class="k">เม.ย. 2026</div><div class="t">อาร์เทมิส 2 บินผ่านดวงจันทร์</div>
+        <div class="d">ลูกเรือสี่คนออกเดินทาง 1 เมษายน และกลับถึงโลกวันที่ 10 เมษายน 2026 นับเป็นการบินผ่านดวงจันทร์โดยมีมนุษย์ครั้งแรกนับตั้งแต่อะพอลโล 17</div></div>
+      <div class="card"><div class="k">252,756</div><div class="t">ไมล์จากโลก</div>
+        <div class="d">ระยะไกลที่สุดที่มนุษย์เคยเดินทางออกไปจากโลก — เป็นสถิติใหม่ที่เกิดขึ้นระหว่างภารกิจนี้</div></div>
+      <div class="card"><div class="k">คาร์บอน</div><div class="t">เพอร์เซเวียแรนซ์พบโมเลกุลเชิงซ้อน</div>
+        <div class="d">พบคาร์บอนเชิงโมเลกุลขนาดใหญ่ในหินโคลนที่หลุมอุกกาบาตเจเซโร บริเวณเดียวกับที่เคยพบร่องรอยที่อาจเป็นสัญญาณชีวภาพ</div></div>
+      <div class="card"><div class="k">AI</div><div class="t">โรเวอร์เริ่มวางแผนเส้นทางเอง</div>
+        <div class="d">เพอร์เซเวียแรนซ์ทำการขับเคลื่อนที่วางแผนโดยปัญญาประดิษฐ์เป็นครั้งแรกบนดาวดวงอื่น</div></div>
+    </div>
+    <div class="src">
+      <b>แหล่งอ้างอิง</b><br>
+      NASA — <i>Liftoff! NASA Launches Astronauts on Historic Artemis Moon Mission</i> และหน้าภารกิจ Artemis II (nasa.gov, 2026)<br>
+      Live Science / phys.org / CNN — รายงานการค้นพบโมเลกุลอินทรีย์โดยยานเพอร์เซเวียแรนซ์และคิวริออซิตี (2026)<br>
+      ScienceDaily — รายงานการขับเคลื่อนที่วางแผนด้วยปัญญาประดิษฐ์ครั้งแรกบนดาวอังคาร (มกราคม 2026)
+    </div>
+  </div>
+</div>
+
+<!-- ========== OVERLAY เจาะลึก C ========== -->
+<div class="ov" id="ovC">
+  <button class="close" data-close>✕</button>
+  <div class="wrap">
+    <div class="badge">แฟ้มลับที่ต้องขยายผล · ๐๓</div>
+    <h2>ผลึกโปรตีนไทย ที่ต้องขึ้นไปโตในอวกาศ</h2>
+    <p class="lede" style="max-width:70ch">
+      บนโลก แรงโน้มถ่วงทำให้ผลึกโปรตีนตกตะกอนและโตอย่างไม่เป็นระเบียบ
+      แต่ในสภาวะไร้น้ำหนัก ผลึกจะเรียงตัวได้สมบูรณ์กว่ามาก นักวิจัยไทยจึงส่งการทดลองขึ้นไปเพาะบนสถานีอวกาศ
+      เพื่อให้เห็นโครงสร้างโปรตีนของเชื้อมาลาเรียได้ชัดเจนขึ้น — และออกแบบยาที่ตรงเป้ากว่าเดิม
+    </p>
+    <div class="cards">
+      <div class="card"><div class="k">NSE</div><div class="t">โครงการ National Space Exploration</div>
+        <div class="d">โครงการวิจัยและทดลองด้านวิทยาศาสตร์อวกาศภายใต้ GISTDA ที่คัดเลือกงานวิจัยไทยขึ้นไปทดลองในอวกาศ</div></div>
+      <div class="card"><div class="k">มาลาเรีย</div><div class="t">เป้าหมายคือยาต้านชนิดใหม่</div>
+        <div class="d">เพาะผลึกโปรตีนของเชื้อมาลาเรียในสภาวะแรงโน้มถ่วงต่ำ เพื่อวิเคราะห์โครงสร้างสามมิติให้ละเอียดกว่าที่ทำได้บนโลก</div></div>
+      <div class="card"><div class="k">TSC</div><div class="t">ก้าวต่อไปของวิศวกรรมไทย</div>
+        <div class="d">ภาคีความร่วมมืออวกาศไทยเดินหน้าออกแบบและสร้างดาวเทียมในประเทศ ควบคู่กับความร่วมมือระดับนานาชาติ</div></div>
+    </div>
+    <div class="src">
+      <b>แหล่งอ้างอิง</b><br>
+      NSTDA SPACE Education — "ทดลองปลูกผลึกโปรตีนในอวกาศ หวังสร้างยาต้านมาลาเรียชนิดใหม่" (nstda.or.th)<br>
+      Thai PBS — "สำเร็จ ปลูกผลึกโปรตีนบนอวกาศ ต่อยอดยาต้านมาลาเรีย"<br>
+      GISTDA — ข้อมูลโครงการ National Space Exploration และภาคีความร่วมมืออวกาศไทย
+    </div>
+  </div>
+</div>
+
+<!-- ========== 360 ========== -->
+<div id="imm">
+  <canvas id="immCanvas"></canvas>
+  <div id="immBar"></div>
+  <button class="close" data-close>✕</button>
+  <div id="immHint">ลากเพื่อมองรอบตัว · เลื่อนเมาส์เพื่อเดินทางเข้าไป</div>
+  <div id="immStages">
+    <div data-s="0">โฟตอนสเฟียร์</div>
+    <div data-s="1">ขอบฟ้าเหตุการณ์</div>
+    <div data-s="2">แรงไทดัล</div>
+    <div data-s="3">จุดเอกฐาน</div>
+  </div>
+  <div id="immUi">
+    <div class="st">ระยะที่ ๑</div>
+    <h3>โฟตอนสเฟียร์</h3>
+    <p>ที่ระยะนี้แสงโคจรรอบหลุมดำได้พอดี ถ้าคุณมองตรงไปข้างหน้า คุณจะเห็นด้านหลังศีรษะของตัวเอง เพราะแสงเดินทางอ้อมกลับมาเข้าตาคุณ</p>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ============ นำทางระหว่างสไลด์ ============ */
+var track   = document.getElementById('track'),
+    slides  = Array.prototype.slice.call(track.children),
+    dotsEl  = document.getElementById('dots'),
+    barEl   = document.getElementById('bar'),
+    cntEl   = document.getElementById('counter'),
+    idx     = 0, N = slides.length;
+
+slides.forEach(function(_, i){
+  var b = document.createElement('button');
+  b.className = 'dot' + (i === 0 ? ' on' : '');
+  b.setAttribute('aria-label', 'ไปยังหน้า ' + (i + 1));
+  b.onclick = function(){ go(i); };
+  dotsEl.appendChild(b);
+});
+var dots = Array.prototype.slice.call(dotsEl.children);
+
+function pad(n){ return n < 10 ? '0' + n : '' + n; }
+function go(n){
+  idx = Math.max(0, Math.min(N - 1, n));
+  track.style.transform = 'translateX(' + (-idx * 100) + 'vw)';
+  dots.forEach(function(d, i){ d.classList.toggle('on', i === idx); });
+  barEl.style.width = ((idx + 1) / N * 100) + '%';
+  cntEl.textContent = pad(idx + 1) + ' / ' + pad(N);
+}
+go(0);
+
+function overlayOpen(){
+  return document.querySelector('.ov.open') || document.getElementById('imm').classList.contains('open');
+}
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape'){ closeAll(); return; }
+  if (overlayOpen()) return;
+  if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' '){ e.preventDefault(); go(idx + 1); }
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); go(idx - 1); }
+  else if (e.key === 'Home'){ go(0); }
+  else if (e.key === 'End'){ go(N - 1); }
+  else if (e.key === 'f' || e.key === 'F'){
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen();
+  }
+});
+var tx = 0, ty = 0;
+document.addEventListener('touchstart', function(e){ tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, {passive:true});
+document.addEventListener('touchend', function(e){
+  if (overlayOpen()) return;
+  var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) go(idx + (dx < 0 ? 1 : -1));
+}, {passive:true});
+
+/* ============ overlay ============ */
+function closeAll(){
+  document.querySelectorAll('.ov.open').forEach(function(o){ o.classList.remove('open'); });
+  var im = document.getElementById('imm');
+  if (im.classList.contains('open')){ im.classList.remove('open'); immRunning = false; }
+}
+document.querySelectorAll('[data-ov]').forEach(function(b){
+  b.onclick = function(){ document.getElementById(b.getAttribute('data-ov')).classList.add('open'); };
+});
+document.querySelectorAll('[data-close]').forEach(function(b){ b.onclick = closeAll; });
+
+/* ============ parallax ตามเมาส์ ============ */
+var mx = 0, my = 0, cx = 0, cy = 0;
+window.addEventListener('mousemove', function(e){
+  mx = (e.clientX / window.innerWidth  - 0.5) * 2;
+  my = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+var depthEls = Array.prototype.slice.call(document.querySelectorAll('[data-depth]'));
+function parallaxTick(){
+  cx += (mx - cx) * 0.06;
+  cy += (my - cy) * 0.06;
+  if (!reduce){
+    for (var i = 0; i < depthEls.length; i++){
+      var el = depthEls[i], d = parseFloat(el.getAttribute('data-depth')) * 100;
+      el.setAttribute('transform', 'translate(' + (-cx * d).toFixed(2) + ',' + (-cy * d * 0.6).toFixed(2) + ')');
+    }
+  }
+  requestAnimationFrame(parallaxTick);
+}
+requestAnimationFrame(parallaxTick);
+
+/* ============ หน้าปก — depth parallax ============ */
+(function hero(){
+  var cv = document.getElementById('heroCanvas'),
+      fb = document.getElementById('heroImg');
+  function fallback(){ cv.style.display = 'none'; fb.style.display = 'block'; }
+  var gl = null;
+  try { gl = cv.getContext('webgl') || cv.getContext('experimental-webgl'); } catch(e){}
+  if (!gl || reduce){ fallback(); return; }
+
+  var vs = 'attribute vec2 p;varying vec2 v;void main(){v=p*0.5+0.5;gl_Position=vec4(p,0.,1.);}';
+  var fs = [
+    'precision mediump float;varying vec2 v;',
+    'uniform sampler2D img,dep;uniform vec2 mouse;uniform float ar,iar;',
+    'void main(){',
+    '  vec2 uv=v; uv.y=1.0-uv.y;',
+    '  float s=ar/iar;',
+    '  if(s>1.0){ uv.y=(uv.y-0.5)/s+0.5; } else { uv.x=(uv.x-0.5)*s+0.5; }',
+    '  float d=texture2D(dep,uv).r;',
+    '  vec2 o=mouse*(d-0.45)*0.055;',
+    '  vec3 c=texture2D(img,uv+o).rgb;',
+    '  gl_FragColor=vec4(1.0-c,1.0);',
+    '}'
+  ].join('\n');
+
+  function sh(t, src){
+    var s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) return null;
+    return s;
+  }
+  var a = sh(gl.VERTEX_SHADER, vs), b = sh(gl.FRAGMENT_SHADER, fs);
+  if (!a || !b){ fallback(); return; }
+  var pr = gl.createProgram();
+  gl.attachShader(pr, a); gl.attachShader(pr, b); gl.linkProgram(pr);
+  if (!gl.getProgramParameter(pr, gl.LINK_STATUS)){ fallback(); return; }
+  gl.useProgram(pr);
+
+  var buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+  var loc = gl.getAttribLocation(pr, 'p');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+  function tex(unit, src, cb){
+    var t = gl.createTexture(), im = new Image();
+    im.onload = function(){
+      gl.activeTexture(gl.TEXTURE0 + unit);
+      gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, im);
+      cb(im);
+    };
+    im.onerror = fallback;
+    im.src = src;
+    return t;
+  }
+  var ready = 0, iar = 16/9;
+  tex(0, 'assets/blackhole.jpg', function(im){ iar = im.width / im.height; ready++; });
+  tex(1, 'assets/blackhole-depth.jpg', function(){ ready++; });
+  gl.uniform1i(gl.getUniformLocation(pr, 'img'), 0);
+  gl.uniform1i(gl.getUniformLocation(pr, 'dep'), 1);
+  var uM = gl.getUniformLocation(pr, 'mouse'),
+      uA = gl.getUniformLocation(pr, 'ar'),
+      uI = gl.getUniformLocation(pr, 'iar');
+
+  function size(){
+    var r = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width  = cv.clientWidth  * r;
+    cv.height = cv.clientHeight * r;
+    gl.viewport(0, 0, cv.width, cv.height);
+  }
+  window.addEventListener('resize', size);
+  size();
+
+  (function draw(){
+    if (ready === 2){
+      gl.uniform2f(uM, cx, cy);
+      gl.uniform1f(uA, cv.clientWidth / cv.clientHeight);
+      gl.uniform1f(uI, iar);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+    requestAnimationFrame(draw);
+  })();
+})();
+
+/* ============ นวัตกรรม — เลือกชั้น ============ */
+(function inno(){
+  var ls = Array.prototype.slice.call(document.querySelectorAll('.layer')),
+      gs = Array.prototype.slice.call(document.querySelectorAll('.lg'));
+  function set(n){
+    ls.forEach(function(l, i){ l.classList.toggle('on', i === n); });
+    gs.forEach(function(g, i){ g.style.opacity = (i === n ? '1' : '0.22'); });
+  }
+  ls.forEach(function(l, i){ l.onmouseenter = l.onclick = function(){ set(i); }; });
+  set(0);
+
+  var d = document.getElementById('debris'), ns = 'http://www.w3.org/2000/svg';
+  for (var i = 0; i < 26; i++){
+    var ang = i / 26 * Math.PI * 2 + i * 0.7,
+        rad = 116 + (i % 5) * 11,
+        c = document.createElementNS(ns, 'circle');
+    c.setAttribute('cx', (230 + Math.cos(ang) * rad).toFixed(1));
+    c.setAttribute('cy', (200 + Math.sin(ang) * rad).toFixed(1));
+    c.setAttribute('r', (1 + (i % 3) * 0.7).toFixed(1));
+    c.setAttribute('fill', '#0F172A');
+    c.setAttribute('opacity', '.5');
+    d.appendChild(c);
+  }
+})();
+
+/* ============ 360 — ภายในจุดเอกฐาน ============ */
+var immRunning = false;
+(function immersive(){
+  var host = document.getElementById('imm'),
+      cv   = document.getElementById('immCanvas'),
+      ui   = document.getElementById('immUi'),
+      bar  = document.getElementById('immBar'),
+      stg  = Array.prototype.slice.call(document.querySelectorAll('#immStages div')),
+      btn  = document.getElementById('goImm');
+
+  var STAGES = [
+    ['ระยะที่ ๑','โฟตอนสเฟียร์','ที่ระยะนี้แสงโคจรรอบหลุมดำได้พอดี ถ้าคุณมองตรงไปข้างหน้า คุณจะเห็นด้านหลังศีรษะของตัวเอง เพราะแสงเดินทางอ้อมกลับมาเข้าตาคุณ'],
+    ['ระยะที่ ๒','ขอบฟ้าเหตุการณ์','เส้นที่ข้ามแล้วย้อนกลับไม่ได้ ไม่ใช่เพราะมีกำแพงอะไรขวางอยู่ แต่เพราะทุกเส้นทางข้างหน้าล้วนมุ่งเข้าสู่ศูนย์กลาง เมื่อมองย้อนออกไป เวลาข้างนอกจะเดินเร็วขึ้นจนเห็นอนาคตของจักรวาลถูกเร่งฉาย'],
+    ['ระยะที่ ๓','แรงไทดัล','แรงโน้มถ่วงที่กระทำต่อเท้าคุณมากกว่าที่ศีรษะอย่างมหาศาล ร่างกายจะถูกยืดออกเป็นเส้น — นักฟิสิกส์เรียกปรากฏการณ์นี้อย่างติดตลกว่า spaghettification'],
+    ['ระยะที่ ๔','จุดเอกฐาน','จุดที่ความหนาแน่นเข้าสู่อนันต์ และสมการทั้งหมดที่เรามีก็ใช้การไม่ได้อีกต่อไป นี่คือขอบเขตความรู้ของมนุษย์ ณ ปัจจุบัน']
+  ];
+
+  var yaw = 0, pitch = 0, prog = 0, tprog = 0, drag = false, lx = 0, ly = 0, gl = null, pr = null, uni = {};
+
+  function setStage(){
+    var s = Math.min(3, Math.floor(prog * 3.999));
+    if (setStage.last === s) return;
+    setStage.last = s;
+    ui.querySelector('.st').textContent = STAGES[s][0];
+    ui.querySelector('h3').textContent  = STAGES[s][1];
+    ui.querySelector('p').textContent   = STAGES[s][2];
+    stg.forEach(function(d, i){ d.classList.toggle('on', i === s); });
+  }
+
+  function open(){
+    document.querySelectorAll('.ov.open').forEach(function(o){ o.classList.remove('open'); });
+    host.classList.add('open');
+    prog = 0; tprog = 0; setStage.last = -1; setStage();
+    if (!gl && !init()){ host.classList.remove('open'); alert('เบราว์เซอร์นี้ไม่รองรับ WebGL จึงไม่สามารถเปิดโหมด 360° ได้'); return; }
+    immRunning = true;
+    size();
+    loop();
+  }
+  if (btn) btn.onclick = open;
+
+  function init(){
+    try { gl = cv.getContext('webgl') || cv.getContext('experimental-webgl'); } catch(e){ return false; }
+    if (!gl) return false;
+
+    var vs = 'attribute vec2 p;varying vec2 v;void main(){v=p;gl_Position=vec4(p,0.,1.);}';
+    var fs = [
+'precision highp float;varying vec2 v;',
+'uniform float yaw,pitch,prog,ar,time;',
+'float h21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}',
+'float stars(vec3 d){',
+'  vec2 uv=vec2(atan(d.z,d.x)*0.15915+0.5,acos(clamp(d.y,-1.,1.))*0.31831);',
+'  float s=0.0;',
+'  for(int i=0;i<3;i++){',
+'    float sc=70.0*pow(2.0,float(i));',
+'    vec2 g=uv*sc;vec2 id=floor(g);vec2 f=fract(g)-0.5;',
+'    float hh=h21(id+float(i)*17.3);',
+'    if(hh>0.88){',
+'      vec2 o=vec2(h21(id+3.1),h21(id+7.7))-0.5;',
+'      float dd=length(f-o*0.6);',
+'      s=max(s,smoothstep(0.16,0.0,dd)*(hh-0.88)/0.12);',
+'    }',
+'  }',
+'  return s;',
+'}',
+/* ฉากห้องเทสเซอแร็กต์ — เส้นกริดหมึกบนพื้นขาว */
+'float grid(vec3 d){',
+'  vec3 a=abs(d);float m=max(a.x,max(a.y,a.z));',
+'  vec2 uv = m==a.x ? d.yz/a.x : (m==a.y ? d.xz/a.y : d.xy/a.z);',
+'  float g=0.0;',
+'  for(int i=0;i<4;i++){',
+'    float sc=pow(2.0,float(i)+1.0);',
+'    vec2 f=abs(fract(uv*sc)-0.5);',
+'    float l=min(f.x,f.y);',
+'    g=max(g,smoothstep(0.045,0.0,l)*(0.75-float(i)*0.15));',
+'  }',
+'  return g;',
+'}',
+'void main(){',
+'  vec2 uv=vec2(v.x*ar,v.y);',
+'  vec3 rd=normalize(vec3(uv,-1.3));',
+'  float cy=cos(pitch),sy=sin(pitch);',
+'  rd=vec3(rd.x,rd.y*cy-rd.z*sy,rd.y*sy+rd.z*cy);',
+'  float cx2=cos(yaw),sx=sin(yaw);',
+'  rd=vec3(rd.x*cx2+rd.z*sx,rd.y,-rd.x*sx+rd.z*cx2);',
+'  float paper=1.0;',
+'  float tess=smoothstep(0.82,1.0,prog);',   /* ระยะสุดท้าย → ห้องเทสเซอแร็กต์ */
+'  vec3 pos=vec3(0.0,mix(2.6,0.35,clamp(prog,0.0,1.0)),mix(22.0,2.2,clamp(prog,0.0,1.0)));',
+'  vec3 dir=rd;',
+'  float ink=0.0;float disk=0.0;bool cap=false;',
+'  vec3 hv=cross(pos,dir);float h2=dot(hv,hv);',
+'  for(int i=0;i<90;i++){',
+'    float r=length(pos);',
+'    if(r<1.0){cap=true;break;}',
+'    if(r>44.0)break;',
+'    float dt=max(0.07,r*0.075);',
+'    vec3 acc=-1.5*h2*pos/pow(r,5.0);',
+'    vec3 npos=pos+dir*dt+0.5*acc*dt*dt;',
+'    if(pos.y*npos.y<0.0){',
+'      float t=abs(pos.y)/max(1e-4,abs(pos.y)+abs(npos.y));',
+'      vec3 hp=mix(pos,npos,t);float hr=length(hp.xz);',
+'      if(hr>2.4&&hr<9.0){',
+'        float f=smoothstep(9.0,6.0,hr)*smoothstep(2.4,3.5,hr);',
+'        float n=0.55+0.45*h21(vec2(atan(hp.z,hp.x)*3.0+hr*1.4,hr*0.7));',
+'        disk+=f*n*0.85;',
+'      }',
+'    }',
+'    dir=normalize(dir+acc*dt);',
+'    pos=npos;',
+'  }',
+'  float col=paper;',
+'  if(!cap){ col=paper-stars(normalize(dir))*0.85; }',
+'  col-=min(disk,1.0)*0.92;',                 /* จานพอกพูน = หมึก */
+'  if(cap){ col=paper; }',                    /* เงาหลุมดำ = กระดาษขาว (ภาพเนกาทีฟ) */
+'  float tg=grid(normalize(dir));',
+'  col=mix(col,paper-tg*0.8,tess);',
+'  col=clamp(col,0.0,1.0);',
+'  vec3 rgb=mix(vec3(col),vec3(col*0.97,col*0.99,1.0),0.35);',
+'  gl_FragColor=vec4(rgb,1.0);',
+'}'
+    ].join('\n');
+
+    function sh(t, src){
+      var s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)){ console.warn(gl.getShaderInfoLog(s)); return null; }
+      return s;
+    }
+    var a = sh(gl.VERTEX_SHADER, vs), b = sh(gl.FRAGMENT_SHADER, fs);
+    if (!a || !b) return false;
+    pr = gl.createProgram();
+    gl.attachShader(pr, a); gl.attachShader(pr, b); gl.linkProgram(pr);
+    if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return false;
+    gl.useProgram(pr);
+
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+    var lp = gl.getAttribLocation(pr, 'p');
+    gl.enableVertexAttribArray(lp);
+    gl.vertexAttribPointer(lp, 2, gl.FLOAT, false, 0, 0);
+    ['yaw','pitch','prog','ar','time'].forEach(function(k){ uni[k] = gl.getUniformLocation(pr, k); });
+    return true;
+  }
+
+  function size(){
+    if (!gl) return;
+    var r = Math.min(window.devicePixelRatio || 1, 1.5);
+    cv.width  = Math.floor(cv.clientWidth  * r);
+    cv.height = Math.floor(cv.clientHeight * r);
+    gl.viewport(0, 0, cv.width, cv.height);
+  }
+  window.addEventListener('resize', function(){ if (immRunning) size(); });
+
+  host.addEventListener('mousedown', function(e){ drag = true; lx = e.clientX; ly = e.clientY; host.classList.add('drag'); });
+  window.addEventListener('mouseup', function(){ drag = false; host.classList.remove('drag'); });
+  window.addEventListener('mousemove', function(e){
+    if (!drag) return;
+    yaw   += (e.clientX - lx) * 0.005;
+    pitch += (e.clientY - ly) * 0.004;
+    pitch  = Math.max(-1.2, Math.min(1.2, pitch));
+    lx = e.clientX; ly = e.clientY;
+  });
+  host.addEventListener('touchstart', function(e){ drag = true; lx = e.touches[0].clientX; ly = e.touches[0].clientY; }, {passive:true});
+  host.addEventListener('touchend', function(){ drag = false; }, {passive:true});
+  host.addEventListener('touchmove', function(e){
+    if (!drag) return;
+    yaw   += (e.touches[0].clientX - lx) * 0.006;
+    pitch += (e.touches[0].clientY - ly) * 0.005;
+    pitch  = Math.max(-1.2, Math.min(1.2, pitch));
+    lx = e.touches[0].clientX; ly = e.touches[0].clientY;
+  }, {passive:true});
+  host.addEventListener('wheel', function(e){
+    e.preventDefault();
+    tprog = Math.max(0, Math.min(1, tprog + e.deltaY * 0.0006));
+  }, {passive:false});
+
+  function loop(){
+    if (!immRunning) return;
+    prog += (tprog - prog) * 0.06;
+    setStage();
+    bar.style.width = (prog * 100) + '%';
+    gl.uniform1f(uni.yaw, yaw);
+    gl.uniform1f(uni.pitch, pitch);
+    gl.uniform1f(uni.prog, prog);
+    gl.uniform1f(uni.ar, cv.clientWidth / cv.clientHeight);
+    gl.uniform1f(uni.time, performance.now() * 0.001);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    requestAnimationFrame(loop);
+  }
+})();
+
+})();
+</script>
+</body>
+</html>
