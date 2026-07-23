@@ -1,0 +1,12 @@
+# Ignore everything by default
+*
+
+# Re-include the main folder
+!main/
+
+# Re-include all files inside main
+!main/**
+
+# Re-include the README and root html file if you want them tracked
+!README.md
+!.gitignore
